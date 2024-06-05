@@ -1,0 +1,7 @@
+cpp/beta_experiment*
+.vscode
+
+cpp/bestof/
+test.csv
+.DS_STORE
+python/__pycache__/
