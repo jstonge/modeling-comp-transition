@@ -23,27 +23,30 @@ struct Sparam {
     const double alpha;
     const double beta;
     const double b;
-    const double c0;
+    const double k;
+    const double x0;
     const double K;
     const int max1;
     const int max2;
 }; // parameter structure
 
-double cost(int n, int p, double c0) {
+// double cost(int n, int p, double c0) {
+double cost(int n, int p, double k, double x0) {
 
     double value = 0.0;
     // if(n>0) value = c0*exp(-3.0*p/(1.0*n));
     // if(n>0) value = c0*exp(-2.0*p/(1.0*n));
     // if(n>0) value = c0*exp(-1.0*p/(1.0*(n+p)));
-    if(n>0) value = c0/(1 + 1.0*(p/n));
+    // if(n>0) value = c0/(1 + 1.0*(p/n));
+    if(n>0) value = 1/(1 + exp(-k*( p/n - x0)));
     
     if(value<1 && value>0) return value;
     else return 0.0;
 }
 
-double tau(double a, double b, int n, int p, double c0) {
+double tau(double a, double b, int n, int p, double k, double x0) {
 
-    double value = (-a+b*(1-cost(n,p,c0)));
+    double value = (-a+b*(1-cost(n,p,k,x0)));
     if(value>0) return value;
     else return 0.0;
 }
@@ -83,10 +86,10 @@ int dydt(double t, const double y[], double f[], void * param) {
                 fref[d1][d2] -= p.nu_n*d1*yref[d1][d2]; //non-prog death output
                 if(d2<p.max2-1) fref[d1][d2] += p.nu_p*(d2+1)*yref[d1][d2+1]; //prog death input
                 fref[d1][d2] -= p.nu_p*d2*yref[d1][d2]; //prog death output
-                if(d2>0 && d1<p.max1-1) fref[d1][d2] += tau(p.alpha, p.beta, d1+1, d2-1,p.c0)*(d1+1)*(1.0-cost(d1+1,d2-1,p.c0))*yref[d1+1][d2-1]; //non-prog to prog input
-                fref[d1][d2] -= tau(p.alpha, p.beta, d1, d2,p.c0)*d1*(1.0-cost(d1,d2,p.c0))*yref[d1][d2]; //non-prog to prog output
-                if(d1<p.max1-1) fref[d1][d2] += tau(p.alpha, p.beta, d1+1, d2,p.c0)*(d1+1)*cost(d1+1,d2,p.c0)*yref[d1+1][d2]; //non-prog death input due to cost
-                fref[d1][d2] -= tau(p.alpha, p.beta, d1, d2,p.c0)*d1*cost(d1,d2,p.c0)*yref[d1][d2]; //non-prog death output due to cost
+                if(d2>0 && d1<p.max1-1) fref[d1][d2] += tau(p.alpha, p.beta, d1+1, d2-1,p.k,p.x0)*(d1+1)*(1.0-cost(d1+1,d2-1,p.k,p.x0))*yref[d1+1][d2-1]; //non-prog to prog input
+                fref[d1][d2] -= tau(p.alpha, p.beta, d1, d2,p.k,p.x0)*d1*(1.0-cost(d1,d2,p.k,p.x0))*yref[d1][d2]; //non-prog to prog output
+                if(d1<p.max1-1) fref[d1][d2] += tau(p.alpha, p.beta, d1+1, d2,p.k,p.x0)*(d1+1)*cost(d1+1,d2,p.k,p.x0)*yref[d1+1][d2]; //non-prog death input due to cost
+                fref[d1][d2] -= tau(p.alpha, p.beta, d1, d2,p.k,p.x0)*d1*cost(d1,d2,p.k,p.x0)*yref[d1][d2]; //non-prog death output due to cost
             
           }
         }
