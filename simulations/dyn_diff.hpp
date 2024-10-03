@@ -29,7 +29,6 @@ struct Sparam {
     const int max2;
 }; // parameter structure
 
-// double cost(int n, int p, double c0) {
 double cost(int n, int p, double k, double x0) {
 
     double value = 0.0;

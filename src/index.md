@@ -82,8 +82,8 @@ In an increasingly data-driven world, individuals who learn to code are favored 
 
 ```tex
 \begin{align*}
-\log\Big[\tau_g(n,p; \alpha, \beta))\Big] &= \alpha (n-1) +\beta (c * p + (1-c)(p+1)) - \alpha * n + \beta * p \\
-                                  &= -\alpha + \beta(1-c)
+\log\Big[\tau_g(n,p; \alpha, \beta))\Big] &= \alpha (n-1) +\beta (c(n,p) * p + (1-c)(p+1)) - \alpha n + \beta p \\
+                                  &= -\alpha + \beta(1-c(n,p))
 \end{align*}
 ```
 
@@ -155,7 +155,26 @@ If we run the model, with the following set of parameters and the above cost fun
     </div>
 </div>
 
-note that we used ${tex`\beta=0.1`} and ${tex`\alpha=0.01`}, which means that the benefits of learning to code is 10x more than not learning to code (recall that relative fitness ${tex`\tau_g`} is in log space; this is a bit much).
+note that we used ${tex`\beta=0.1`} and ${tex`\alpha=0.01`}, which means that the benefits of learning to code is 10x more than not learning to code (recall that relative fitness ${tex`\tau_g`} is in log space; this is a bit much). Note that when you start without any programmers, it stays that way. Say that I decrease `k=5`, we should see some more
+
+```
+μ   νn   νp   α    β    k    x0   K  max1 max2 ic  is_temporal
+0.1 0.01 0.03 0.01 0.1  5.0 0.25 40 40   40   $ic 1 
+```
+
+<div class="grid grid-cols-3">
+    <div>
+        <img src="./movie/20241003-3/movie2_ic0.gif">
+    </div>
+    <div>
+        <img src="./movie/20241003-3/movie2_ic1.gif">
+    </div>
+    <div>
+        <img src="./movie/20241003-3/movie2_ic3.gif">
+    </div>
+</div>
+
+It is a bit better, but still have some really big groups. On average we always have above 30 people in the group.
 
 ### Previously on...
 
