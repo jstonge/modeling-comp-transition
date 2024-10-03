@@ -76,7 +76,7 @@ int main(int argc, const char *argv[]) {
     double last0 = y[0][0];
     double diff = 1.0;
     int status(GSL_SUCCESS);
-    for (double t_target = t+t_step; t_target<1000; t_target += t_step ) { //stop by time
+    for (double t_target = t+t_step; t_target<2000; t_target += t_step ) { //stop by time
 
         while (t < t_target) {
             status = gsl_odeiv_evolve_apply (evolve,control,step,&sys,&t,t_target,&dt,y.data());

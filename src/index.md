@@ -12,13 +12,13 @@ The classical example is that of turbidity in shallow lakes, in response to exce
 \dot{X} = \frac{a + X^2}{1+X^2} - rX
 ```
 
-where _X_ is the ecosystem state (turbidity of the lake), while _r_ is the parameter conditions (like nutrients). As you add more nutrients, nothing might happen for a while to water clarity. But as you hit a threshold, then you bifurcate to a new fixed point of turbidity that is much higher than the previous one. Unfortunately, as the story goes, in the case of saddle-node bifurcation, you get back to the previous equilibrium state you need to remove much more nutrients from the lake than what has been allowed before. It might look like 
+where _X_ is the ecosystem state (turbidity of the lake), while _r_ is the parameter condition (like nutrients). As you add more nutrients, nothing might happen for a while to the state of the lake. But as you hit a critical threshold, you bifurcate to a new fixed point of turbidity that is much higher than the previous one ('catastrophe' event). Unfortunately, as the story goes, to get get back to your favored equilibrium you need to remove much more nutrients from the lake than what has been allowed before. It might look like 
 
 ![](./figs/hysteresis.png)
 
 Try explaining that to farmers than the previous allowed level of nutrients is too much now.
 
-Now, this example is a case in one dimension, with a single parameter _r_. In the next case popularized by Strogatz, we have the outbreak of spruce budworms in forest, which the nondimensional version looks like
+This example has a a single parameter _r_. In the next example popularized by Strogatz, we have the outbreak of spruce budworms in forest, which the nondimensional version looks like
 
 ```tex
 \dot{X} = rX(1 - \frac{X}{K}) - \frac{X^2}{1+X^2}
@@ -67,14 +67,14 @@ We are interested in modeling the varying cost-benefit ratio of having programme
 \end{align*}
 ```
 
-where ${tex`\nu n`} and ${tex`\nu p`} are graduation rates of non-programmers and non-programmers. There is constant inflow of non-programmers in the system. 
+where ${tex`n\nu_n`} and ${tex`p\nu_p`} are graduation rates of non-programmers and non-programmers. There is constant inflow of non-programmers in the system. 
 
 Assuming  that learning to code confers a collective benefits on individuals ${tex`\tau_g(n,p; \alpha, \beta) \propto \frac{\bar{Z}_{n,p}}{Z_{n,p}}`}, where
 
 ```tex
 \begin{align*}
-\log(Z_{n,p}) &\sim \alpha * n + \beta * p \\
-\log(\bar{Z}_{n,p}) &\sim \alpha (n-1) +\beta (c * p + (1-c)(p+1))
+\log(Z_{n,p}) &\sim \alpha n + \beta p \\
+\log(\bar{Z}_{n,p}) &\sim \alpha (n-1) +\beta (c(n,p) p + (1-c(n,p))(p+1))
 \end{align*}
 ```
 
@@ -89,7 +89,7 @@ In an increasingly data-driven world, individuals who learn to code are favored 
 
 ##  Lab notes cost functions
 
-We keep track of the different formulations of the cost functions below, from most recent to older entries.
+We keep track of the different formulations of the cost functions below, from most recent to older entries. The current model can always be found [here](https://github.com/jstonge/modeling-comp-transition/blob/main/simulations/dyn_diff.hpp).
 
 ### 2024-10-03
 
@@ -136,7 +136,7 @@ With `k=40` and `k=20`, we see that a fraction of _p/n = 0_ it is impossible for
 
 With a lower k value, we find that decrease in cost is less steep. At `k=10`, we get that _p/n = 0.5_ some people stil fail to learn to code, and not everybody fail  when there is no programmer around.
 
-If we run the model, with the following set of parameters and the above cost function, for different initial conditions
+If we run the model, with the following set of parameters and the above cost function, for different initial conditions (with more or less programmers to start with, here we let run for 10 000 steps):
 
 ```
 μ   νn   νp   α    β    k    x0   K  max1 max2 ic  is_temporal
@@ -145,33 +145,44 @@ If we run the model, with the following set of parameters and the above cost fun
 
 <div class="grid grid-cols-3">
     <div>
-        <img src="./movie/20241003-1/movie2_ic0.gif" width=400>
+        <img src="./movie/20241003-1/movie2_ic0.gif">
     </div>
     <div>
-        <img src="./movie/20241003-1/movie2_ic1.gif" width=400>
+        <img src="./movie/20241003-1/movie2_ic1.gif">
     </div>
     <div>
-        <img src="./movie/20241003-1/movie2_ic3.gif" width=400>
+        <img src="./movie/20241003-1/movie2_ic3.gif">
     </div>
 </div>
 
-with a lower `k`
-```
-μ   νn   νp   α    β    k    x0   K  max1 max2 ic  is_temporal
-0.1 0.01 0.03 0.01 0.1  20.0 0.25 20 40   40   $ic 1 
-```
+note that we used ${tex`\beta=0.1`} and ${tex`\alpha=0.01`}, which means that the benefits of learning to code is 10x more than not learning to code (recall that relative fitness ${tex`\tau_g`} is in log space; this is a bit much).
 
-<div class="grid grid-cols-3">
-    <div>
-        <img src="./movie/20241003-2/movie2_ic0.gif" width=400>
+### Previously on...
+
+
+Here are few other things we've tried:
+
+#### 1. ${tex`c(n,p) = e^{3p/n}`}
+
+<details>
+  <summary>result</summary>
+    <div class="grid grid-cols-3">
+        <div>
+            <img src="./movie/20241003-2/movie2_ic0.gif">
+        </div>
+        <div>
+            <img src="./movie/20241003-2/movie2_ic1.gif">
+        </div>
+        <div>
+            <img src="./movie/20241003-2/movie2_ic3.gif">
+        </div>
     </div>
-    <div>
-        <img src="./movie/20241003-2/movie2_ic1.gif" width=400>
-    </div>
-    <div>
-        <img src="./movie/20241003-2/movie2_ic3.gif" width=400>
-    </div>
-</div>
+
+    μ   νn   νp   α    β    k    x0   K  max1 max2 ic  is_temporal
+    0.1 0.01 0.03 0.01 0.1  20.0 0.25 20 40   40   $ic 1 
+</details>
+
+with some more we didn't put.
 
 ## More ideas
 
