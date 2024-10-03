@@ -14,7 +14,7 @@ The classical example is that of turbidity in shallow lakes, in response to exce
 
 where _X_ is the ecosystem state (turbidity of the lake), while _r_ is the parameter conditions (like nutrients). As you add more nutrients, nothing might happen for a while to water clarity. But as you hit a threshold, then you bifurcate to a new fixed point of turbidity that is much higher than the previous one. Unfortunately, as the story goes, in the case of saddle-node bifurcation, you get back to the previous equilibrium state you need to remove much more nutrients from the lake than what has been allowed before. It might look like 
 
-![](./hysteresis.png)
+![](./figs/hysteresis.png)
 
 Try explaining that to farmers than the previous allowed level of nutrients is too much now.
 
@@ -26,23 +26,23 @@ Now, this example is a case in one dimension, with a single parameter _r_. In th
 
 Here, the removal of the spruce budworms _X_ is a nonlinear term, wheras the growth rate takes a logistic form with growth rate _r_ and a carrying capacity _K_. For specific value of _K_ and _r_, we might have something like
 
-![](./budworms1.png)
+![](./figs/budworms1.png)
 
 Then, with some algebra, Strogatz show that we have hysteresis in this 2d systems 
 
-![](./budworms2.png)
+![](./figs/budworms2.png)
 
 To see how the pair of parameters _r_ and _k_ impact the ecosystem, you now need a 3d plot (plot borrowed from Garfinkel et al. 2021):
 
-![](./budworms3.png)
+![](./figs/budworms3.png)
 
 The management story here is that if you want to get from outbreak to refugee only, you could either drastically reduce _r_ (good luck with that) or perhaps reduce a little bit _k_ and _r_ (get into the bistable region, black star), then reduce _X_ (by spraying insecticides; white star). With this strategy, the system could go back by itself in the low-X equilibrium state (red star).
 
-In both cases, we have a single state variable driven by one or more condition parameters. In the first case, the import of nutrients is nonlinear, with the removal being linear. In the second case, we end up with the removal being nonlinear (and not dependent on any parameter), while the reproduction rate is linear.
+In both cases, we have a single state variable driven by one or more condition parameters. In the first case, the import of nutrients is nonlinear, with the removal being linear. In the second case, we end up with the removal being nonlinear (and not dependent on any parameter), while the reproduction rate is linear. 
 
 In ecology, there are two ways by which alternative stable states are thought to happen; either by a shift in parameters shift, or in state variables.
 
-![](./beisner2003.jpg)
+![](./figs/beisner2003.jpg)
 
 The key differences are part of cultural differences in ecology:
 
@@ -54,7 +54,7 @@ The key differences are part of cultural differences in ecology:
 
 ## GMEs hysteresis
 
-We are interested in modeling the varying cost-benefit ratio of having programmers in research groups. Let ${tex`G_{n,p}`} be the fraction of groups with _n_ non-programmers and _p_ programmers. We have the following model:
+We are interested in modeling the varying cost-benefit ratio of having programmers in research groups. Let ${tex`G_{n,p}`} be the fraction of groups with _n_ non-programmers and _p_ programmers. The idea is that we want to know under which conditions we can have bistable regime of groups with majority of programmers and non-programmers, in an shift environement (say, the humanities becoming more computational). We have the following model:
 
 ```tex
 \begin{align*}
@@ -67,7 +67,18 @@ We are interested in modeling the varying cost-benefit ratio of having programme
 \end{align*}
 ```
 
-where ${tex`\nu n`} and ${tex`\nu p`} are graduation rates of non-programmers and non-programmers. There is constant inflow of non-programmers in the system.
+where ${tex`\nu n`} and ${tex`\nu p`} are graduation rates of non-programmers and non-programmers. There is constant inflow of non-programmers in the system. 
+
+Assuming  that learning to code confers a collective benefits on individuals ${tex`\tau_g(n,p; \alpha, \beta) \propto \frac{\bar{Z}_{n,p}}{Z_{n,p}}`}, where
+
+```tex
+\begin{align*}
+\log(Z_{n,p}) &\sim \alpha * n + \beta * p \\
+\log(\bar{Z}_{n,p}) &\sim \alpha (n-1) +\beta (c * p + (1-c)(p+1))
+\end{align*}
+```
+
+In an increasingly data-driven world, individuals who learn to code are favored over non-programmers, that is ${tex`\beta >> \alpha`}.
 
 ```tex
 \begin{align*}
@@ -76,9 +87,9 @@ where ${tex`\nu n`} and ${tex`\nu p`} are graduation rates of non-programmers an
 \end{align*}
 ```
 
-##  Lab notes
+##  Lab notes cost functions
 
-We keep track of the different formulations of the cost functions below, from most recent to older entries
+We keep track of the different formulations of the cost functions below, from most recent to older entries.
 
 ### 2024-10-03
 
@@ -100,20 +111,68 @@ function c(x,k,x0) {
 Plot.plot({
     nice: true,
     grid: true,
-    caption: "k=40, x0=0.25",
+    caption: "(black) k=40, x0=0.25; (red) k=20, x0=0.25; (green) k=10, x0=0.25",
     x: {label:"p/n"},
+    y: {label:"c(n,p)"},
     marks: [
         Plot.line(
             d3.range(0, 1, 0.01),
             { x: x => x, y: x => c(x, 40, 0.25) }
+        ),
+        Plot.line(
+            d3.range(0, 1, 0.01),
+            { x: x => x, y: x => c(x, 20, 0.25), stroke: "red" }
+        ),
+        Plot.line(
+            d3.range(0, 1, 0.01),
+            { x: x => x, y: x => c(x, 10, 0.25), stroke: "green" }
         )
     ]
 })
 ```
 
-with a fraction of p/n = 0, we are assuming it is impossible for non-programmers to convert into programmers. This is a bit intense. When the ratio is 0.25, we see the sharpest decline in cost (something like 1 programmer in a group of 4). This is pretty arbitrary. But the goal for now is to get some hysteresis, and we wanted a sharp decline. Finally, this sharp decline means that 40% of programmers in your team (regardless of size) is enough for anybody to successfully learn programming.
+With `k=40` and `k=20`, we see that a fraction of _p/n = 0_ it is impossible for non-programmers to convert into programmers. This is a bit intense. When the ratio is _0.25_, we see the sharpest decline in cost (something like 1 programmer in a group of 4). This is pretty arbitrary. With `k=40`, we observe a sharp decline, meaning that _40%_ of programmers in your team (regardless of size) is enough for anybody to successfully learn programming.
 
+
+With a lower k value, we find that decrease in cost is less steep. At `k=10`, we get that _p/n = 0.5_ some people stil fail to learn to code, and not everybody fail  when there is no programmer around.
+
+If we run the model, with the following set of parameters and the above cost function, for different initial conditions
+
+```
+μ   νn   νp   α    β    k    x0   K  max1 max2 ic  is_temporal
+0.1 0.01 0.03 0.01 0.1  40.0 0.25 40 40   40   $ic 1 
+```
+
+<div class="grid grid-cols-3">
+    <div>
+        <img src="./movie/20241003-1/movie2_ic0.gif" width=400>
+    </div>
+    <div>
+        <img src="./movie/20241003-1/movie2_ic1.gif" width=400>
+    </div>
+    <div>
+        <img src="./movie/20241003-1/movie2_ic3.gif" width=400>
+    </div>
+</div>
+
+with a lower `k`
+```
+μ   νn   νp   α    β    k    x0   K  max1 max2 ic  is_temporal
+0.1 0.01 0.03 0.01 0.1  20.0 0.25 20 40   40   $ic 1 
+```
+
+<div class="grid grid-cols-3">
+    <div>
+        <img src="./movie/20241003-2/movie2_ic0.gif" width=400>
+    </div>
+    <div>
+        <img src="./movie/20241003-2/movie2_ic1.gif" width=400>
+    </div>
+    <div>
+        <img src="./movie/20241003-2/movie2_ic3.gif" width=400>
+    </div>
+</div>
 
 ## More ideas
 
-- For us, one idea would be that the landscape (institutions) are broadly constant, while one population (of programmers) could end up either displacing the other or could live in a bistable regime.
+- For us, one idea would be that the landscape (institutions) are broadly constant, while one population (of programmers) could end up either displacing the other or could live in a bistable regime. This is another occasion to model timescale separation!
