@@ -1,7 +1,7 @@
 #!/bin/bash
 
 date=20241003
-part=3
+part=4
 outdir=../src/movie/$date-$part
 mkdir -p $outdir
 for ic in 0 1 3;

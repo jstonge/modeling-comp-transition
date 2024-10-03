@@ -49,7 +49,8 @@ double tau(double a, double b, int n, int p, double k, double x0) {
 
 double sigma(int n, int p, double k, double m) {
     // limit on group size as sigmoid??
-    double value = m*(n+p+1) * (1.0-(1.0+n+p)/(1.0*k));
+    // double value = m*(n+p+1) * (1.0-(1.0+n+p)/(1.0*k));
+    double value = m*(n+p+1) * (1.0-((0.5*pow(1.0+n+p,2))/1000));
     if(value>0) return value;
     else return 0.0;
 }

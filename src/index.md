@@ -91,7 +91,7 @@ In an increasingly data-driven world, individuals who learn to code are favored 
 
 We keep track of the different formulations of the cost functions below, from most recent to older entries. The current model can always be found [here](https://github.com/jstonge/modeling-comp-transition/blob/main/simulations/dyn_diff.hpp).
 
-### 2024-10-03
+### 2024-10-03 [5cd819a](https://github.com/jstonge/modeling-comp-transition/blob/5cd819a74bb1d856cf904444e7e349c0652c399c/simulations/dyn_diff.hpp)
 
 Currently, our cost function is defined as
 
@@ -175,6 +175,33 @@ note that we used ${tex`\beta=0.1`} and ${tex`\alpha=0.01`}, which means that th
 </div>
 
 It is a bit better, but still have some really big groups. On average we always have above 30 people in the group.
+
+### 2024-10-03 [5cd819a](https://github.com/jstonge/modeling-comp-transition/blob/5cd819a74bb1d856cf904444e7e349c0652c399c/simulations/dyn_diff.hpp)
+
+Here we modify a bit the structure of the model. We will try adding some resource constraint on the growth of group size. The idea will be that not only there is a carrying capacity, but this capacity is limited by per-capita resources:
+
+```tex
+\mu \cdot G_{n-1,p} \cdot (p+n) \cdot \Big(1-\frac{r(n+p)}{R_{max}} \Big)
+```
+
+where ${tex`r(n+p) = r_0 \times (n + p)^2`}, and ${tex`R_{max}`} represents the total resources available (we hardcoded _r0=0.5_ and _Rmax=1000_ for now).
+
+```
+μ   νn   νp   α    β    k    x0   K  max1 max2 ic  is_temporal
+0.1 0.01 0.03 0.01 0.1  5.0 0.25 40 40   40   $ic 1 
+```
+
+<div class="grid grid-cols-3">
+    <div>
+        <img src="./movie/20241003-4/movie2_ic0.gif">
+    </div>
+    <div>
+        <img src="./movie/20241003-4/movie2_ic1.gif">
+    </div>
+    <div>
+        <img src="./movie/20241003-4/movie2_ic3.gif">
+    </div>
+</div>
 
 ### Previously on...
 
