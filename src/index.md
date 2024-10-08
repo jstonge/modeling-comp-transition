@@ -52,22 +52,54 @@ The key differences are part of cultural differences in ecology:
 - `ecosystem perspective`: shift in parameters (changing the underlying landscape)
 
 
-## GMEs hysteresis
+As mentionned by Giulio, we should also note that all previous examples have fixed points that are solutions of a third order equation:
+
+```tex
+ax^3+bx^2+cx+d=0
+```
+
+And the thing, as he say, is that you cannot get hysteresis with an equation of a lower order.
+
+## GMEs hysteresis: base model
+
+<img src="./figs/jsoScribbles.jpeg" class="img-margin-right" alt="Image description" width=450>
 
 We are interested in modeling the varying cost-benefit ratio of having programmers in research groups. Let ${tex`G_{n,p}`} be the fraction of groups with _n_ non-programmers and _p_ programmers. The idea is that we want to know under which conditions we can have bistable regime of groups with majority of programmers and non-programmers, in an shift environement (say, the humanities becoming more computational). We have the following model:
 
 ```tex
 \begin{align*}
-	\frac{d}{dt}G_{n,p} &= \mu G_{n+1,p} \cdot (n+p+1)(1-\frac{1+n+p}{k}) \\
-                        &- \mu G_{n-1,p} \cdot (n+p+1)(1-\frac{1+n+p}{k}) \\
-                        &+ \nu_n \Big((n+1)G_{n+1,p}-nG_{n,p}\Big) \\
-	                    &+ \nu_p\Big((p+1)G_{n,p+1} - pG_{n,p} \Big) \\
-						&+ \Big[ \tau_g(n+1,p-1)(1-c(n+1, p-1)G_{n+1,p-1} - \tau_g(n,p)G_{n,p} \Big] \\
-	                    &+ \tau_g(n+1,p)(1-c(n+1,p))G_{n+1,p}
+	\frac{d}{dt}G_{n,p} &= \textcolor{red}{\mu G_{n-1,p} \cdot (n+p)(1-\frac{n+p}{k})}  \\
+                        &- \textcolor{blue}{\mu G_{n,p} \cdot (n+p+1)(1-\frac{n+p+1}{k})} \\
+                        &+ \textcolor{red}{\nu_n(n+1)G_{n+1,p}} \\
+                        &- \textcolor{blue}{n\nu_n G_{n,p}} \\
+                        &+ \textcolor{red}{\nu_p(p+1)G_{n,p+1}} \\
+                        &- \textcolor{blue}{p\nu_p G_{n,p}} \\
+						&+ \textcolor{red}{\tau(\alpha, \beta, n+1, p-1)(n+1)(1 - c(n+1,p-1))*G_{n+1,p-1}} \\
+                        &- \textcolor{blue}{\tau(\alpha, \beta, n, p)\cdot n\cdot (1-c(n,p))G_{n,p}} \\
+                        &+ \textcolor{red}{\tau(\alpha, \beta, n+1, p) (n+1) c(n,p)G_{n,p}} \\
+						&- \textcolor{blue}{\tau(\alpha, \beta, n, p)(n+1)c(n+1,p-1)*G_{n,p} }
 \end{align*}
 ```
 
-where ${tex`n\nu_n`} and ${tex`p\nu_p`} are graduation rates of non-programmers and non-programmers. There is constant inflow of non-programmers in the system. 
+The color coding maps to the picture on the right. The output flow (probability of leaving a state) is in ${tex`\textcolor{blue}{blue}`}, while the input flow is in ${tex`\textcolor{red}{red}`}.  We highlight a state (${tex`G_{2,2}`}, or 2 non-programmers and 2 programmers) to facilitate the interpretation. The params are
+
+| params | description | 
+| ----   | -----      |
+| ${tex`n\nu_n`} | graduation non-programmers | 
+| ${tex`p\nu_p`} | graduation programmers | 
+| ${tex`\mu`} | inflow non-programmers | 
+| ${tex`K`} | group carrying capacity | 
+| ${tex`\alpha`} | benefit non-programmers | 
+| ${tex`\beta`} | benefit programmers | 
+
+| function | form | description |
+| ----   | -----      |        ----         |
+| ${tex`\tau_g(n,p)`} | ${tex`-\alpha + \beta(1-c(n,p))`} |            |
+| ${tex`c(n,p)`} | TBD |                    |
+
+We explore our different functions in the following subsections
+
+#### collective benefits of coding
 
 Assuming  that learning to code confers a collective benefits on individuals ${tex`\tau_g(n,p; \alpha, \beta) \propto \frac{\bar{Z}_{n,p}}{Z_{n,p}}`}, where
 
@@ -78,7 +110,7 @@ Assuming  that learning to code confers a collective benefits on individuals ${t
 \end{align*}
 ```
 
-In an increasingly data-driven world, individuals who learn to code are favored over non-programmers, that is ${tex`\beta >> \alpha`}.
+In an increasingly data-driven world, individuals who learn to code are favored over non-programmers, that is ${tex`\beta >> \alpha`}.  
 
 ```tex
 \begin{align*}
@@ -87,9 +119,35 @@ In an increasingly data-driven world, individuals who learn to code are favored 
 \end{align*}
 ```
 
+#### Cost function
+
+Currently, our cost function is defined as
+
+```tex
+c(n,p) = \frac{1}{1 + e^{k \cdot ( p/n - x_0)}}
+```
+
+In the picture above, we see that the upper-left diagonal indicates successful transition, which happens at a rate ${tex`\tau(\alpha, \beta, n, p) \cdot (1 - c(n,p))\cdot n`}. The incoming input flow is proportional to ${tex`G_{3,1}`}, while the output flow is always proportional to current state.
+
+
 ##  Lab notes cost functions
 
 We keep track of the different formulations of the cost functions below, from most recent to older entries. The current model can always be found [here](https://github.com/jstonge/modeling-comp-transition/blob/main/simulations/dyn_diff.hpp).
+
+### 2024-10-04
+
+<div class="grid grid-cols-3">
+    <div>
+        <img src="./movie/20241004-1/movie2_ic0.gif">
+    </div>
+    <div>
+        <img src="./movie/20241004-1/movie2_ic1.gif">
+    </div>
+    <div>
+        <img src="./movie/20241004-1/movie2_ic3.gif">
+    </div>
+</div>
+
 
 ### 2024-10-03 [5cd819a](https://github.com/jstonge/modeling-comp-transition/blob/5cd819a74bb1d856cf904444e7e349c0652c399c/simulations/dyn_diff.hpp)
 
@@ -176,7 +234,7 @@ note that we used ${tex`\beta=0.1`} and ${tex`\alpha=0.01`}, which means that th
 
 It is a bit better, but still have some really big groups. On average we always have above 30 people in the group.
 
-### 2024-10-03 [5cd819a](https://github.com/jstonge/modeling-comp-transition/blob/5cd819a74bb1d856cf904444e7e349c0652c399c/simulations/dyn_diff.hpp)
+### 2024-10-03 [9193c2e](https://github.com/jstonge/modeling-comp-transition/blob/9193c2e8c3510b793d7d784a2ee74ea611b1beae/simulations/dyn_diff.hpp)
 
 Here we modify a bit the structure of the model. We will try adding some resource constraint on the growth of group size. The idea will be that not only there is a carrying capacity, but this capacity is limited by per-capita resources:
 
@@ -184,12 +242,13 @@ Here we modify a bit the structure of the model. We will try adding some resourc
 \mu \cdot G_{n-1,p} \cdot (p+n) \cdot \Big(1-\frac{r(n+p)}{R_{max}} \Big)
 ```
 
-where ${tex`r(n+p) = r_0 \times (n + p)^2`}, and ${tex`R_{max}`} represents the total resources available (we hardcoded _r0=0.5_ and _Rmax=1000_ for now).
+where ${tex`r(n+p) = r_0 \times (n + p)^2`}, and ${tex`R_{max}`} represents the total resources available (we hardcoded ${tex`r_0=0.5`} and ${tex`R_{max}=1000`} for now).
 
 ```
 μ   νn   νp   α    β    k    x0   K  max1 max2 ic  is_temporal
 0.1 0.01 0.03 0.01 0.1  5.0 0.25 40 40   40   $ic 1 
 ```
+
 
 <div class="grid grid-cols-3">
     <div>
@@ -203,10 +262,38 @@ where ${tex`r(n+p) = r_0 \times (n + p)^2`}, and ${tex`R_{max}`} represents the 
     </div>
 </div>
 
+Ok, this is creating a wall at around 30 people, which is not that helpful. I guess that a more 'realistic' approach would be that ressources to grow depend on group fitness. In this case, we can try the following (disclaimer, this was done with a little bit of my friend `chatGPT`):
+
+```tex
+Z_{n,p} \sim \alpha n + \beta p - \frac{r(n+p)}{R(n,p)}
+```
+
+where ${tex`r(n+p)`}  is the resource cost for group of size _(n+p)_ and ${tex`R(n,p)=R_{max}\cdot F(n,p)`} is the resource availability. One option for the fitness function _F(n,p)_ is ${tex`F(n,p) = \frac{\beta p}{\alpha n + \beta p}`}.  Groups with more programmers have higher fitness, reflecting an increase in productivity (to see if programmers really are 'more productive'). Putting all of this together (with ${tex`r_0=0.5`} and ${tex`R_{max}=1000`})
+
+```
+μ   νn   νp   α    β    k    x0   K  max1 max2 ic  is_temporal
+0.1 0.01 0.03 0.01 0.1  5.0 0.25 40 40   40   $ic 1 
+```
+
+<div class="grid grid-cols-3">
+    <div>
+        <img src="./movie/20241003-5/movie2_ic0.gif">
+    </div>
+    <div>
+        <img src="./movie/20241003-5/movie2_ic1.gif">
+    </div>
+    <div>
+        <img src="./movie/20241003-5/movie2_ic3.gif">
+    </div>
+</div>
+
+The model is becoming a big ungainly. We will stop here for today.
+
+
 ### Previously on...
 
 
-Here are few other things we've tried:
+Here are few other cost functions we've tried:
 
 #### 1. ${tex`c(n,p) = e^{3p/n}`}
 
@@ -233,3 +320,16 @@ with some more we didn't put.
 ## More ideas
 
 - For us, one idea would be that the landscape (institutions) are broadly constant, while one population (of programmers) could end up either displacing the other or could live in a bistable regime. This is another occasion to model timescale separation!
+
+<style>
+
+    .img-margin-right {
+        float: right;
+        margin-left: 20px; /* Adjust the left margin to space it from surrounding content */
+        margin-bottom: 20px;
+        max-width: 100%;
+        height: auto;
+    }
+
+
+</style>
