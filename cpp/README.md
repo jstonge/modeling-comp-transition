@@ -47,3 +47,21 @@ In (A), adding one programmer to a group makes a huge difference. In a group of 
 ```
 
 `results:` Programmers and large groups are overly favored. 
+
+What about the logistic?
+
+```
+cost(n,p; k=10, x0=0.5)1 / (1 + exp(-k * (p/n - x0)))
+```
+
+With this general form of the logistic function, we can control the steepness of the decrease (k), as well as the location of the midpoint (x0). As we reduce `k`, the decrease is less steep, but the intercept also decrease:
+
+![](logistic-k-exp)
+
+In this example, when `k` goes from 10 to 5, the intercept is around 0.90 (making the transition easier). Similarly, playing with x0:
+
+![](logistic-x0-exp)
+
+We can see that increasing `x0` means that the midpoint is more to the right. When `x0=0.5`, the midpoint between 10 (as specified by `k`), and 0 is equal to 5. In our setup, this means that when in a group of 15 people you have 1:2 programmers for non-programmers, the cost of transitionning is 0.5 (a coin flip). With `x0=0.75`, you need at least 7.5 prgorammers for the same number of non-programmers to have that cost. 
+
+Another way to say it is that when you decrease by half x0, you need half of the programmers to have the same cost. 

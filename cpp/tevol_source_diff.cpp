@@ -32,18 +32,18 @@ int main(int argc, const char *argv[]) {
     double nu_p = atof(argv[3]); // graduation rate of programmers 0.05
     double alpha = atof(argv[4]); // productivity of non-programmer 0.01
     double beta = atof(argv[5]); //productivity of programmers 0.02
-    double b = atof(argv[6]); // 0.5
-    double k = atof(argv[7]); // 0.75
-    double x0 = atof(argv[8]); // 0.75
-    double K = atof(argv[9]); //group carrying capacity 40
-	int    max1 = atoi(argv[10]); //max number of non-programmers 40
-    int    max2 = atoi(argv[11]); //max number of programmers 40
-    int    IC = atoi(argv[12]); //type of initial conditions
-    int    TEMPORAL = atoi(argv[13]); //type of initial conditions
+    // double b = atof(argv[6]); // 0.5
+    double k = atof(argv[6]); 
+    double x0 = atof(argv[7]);
+    double K = atof(argv[8]); //group carrying capacity 40
+	int    max1 = atoi(argv[9]); //max number of non-programmers 40
+    int    max2 = atoi(argv[10]); //max number of programmers 40
+    int    IC = atoi(argv[11]); //type of initial conditions
+    int    TEMPORAL = atoi(argv[12]); //type of initial conditions
     if(argc<4) {cerr << "Requires a lot of parameters: bla bla bla \n"
                     << endl; return 0;}
 
-    Sparam param = {mu, nu_n, nu_p, alpha, beta, b, k, x0, K, max1, max2};
+    Sparam param = {mu, nu_n, nu_p, alpha, beta, k, x0, K, max1, max2};
 
     // Integrator parameters
     double t = 0.0;
@@ -119,7 +119,7 @@ int main(int argc, const char *argv[]) {
                 if(d1+d2>0) avg += (1.0*d2)/(d1+d2)*y[d1][d2];
             }
         }
-        cout << t << "," << mu << ", " << nu_n << ", " << nu_p << ", " << alpha << ", " << beta << ", " << b << ", " << k << ", " << x0  << ", " << K << "," << IC << "," << avg << "\n";
+        cout << t << "," << mu << ", " << nu_n << ", " << nu_p << ", " << alpha << ", " << beta << ", " << k << ", " << x0  << ", " << K << "," << IC << "," << avg << "\n";
 
     }
 

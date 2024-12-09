@@ -22,7 +22,6 @@ struct Sparam {
     const double nu_p;
     const double alpha;
     const double beta;
-    const double b;
     const double k;
     const double x0;
     const double K;
@@ -35,10 +34,8 @@ double cost(int n, int p, double k, double x0) {
 
     double value = 0.0;
     // if(n>0) value = c0*exp(-3.0*p/(1.0*n));
-    // if(n>0) value = c0*exp(-2.0*p/(1.0*n));
-    // if(n>0) value = c0*exp(-1.0*p/(1.0*(n+p)));
     // if(n>0) value = c0/(1 + 1.0*(p/n));
-    if(n>0) value = 1/(1 + exp(-k*( p/n - x0)));
+    if(n>0) value = 1/(1 + exp(k*( p/n - x0)));
     
     if(value<1 && value>0) return value;
     else return 0.0;
