@@ -1,7 +1,5 @@
-cpp/beta_experiment*
-.vscode
-
-cpp/bestof/
-test.csv
-.DS_STORE
-python/__pycache__/
+.DS_Store
+/dist/
+node_modules/
+yarn-error.log
+.venv/
