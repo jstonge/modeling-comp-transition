@@ -11,8 +11,8 @@ using namespace std;
  * @file   dyn_diff.hpp
  * @brief  ODE system for research group dynamics in a master equation system
  *
- * @author  LHD & JSO
- * @since   2025-03-04
+ * @author  LHD
+ * @since   2023-11-28
  */
 
 
@@ -58,18 +58,20 @@ double sigma(int n, int p, double k, double m) {
 
 //********** function dydt definition **************************************************************
 int dydt(double t, const double y[], double f[], void * param) {
+    // ODE system for diffusion
+
+    //std::cout << t << std::endl;
+
+    // Cast parameters
     Sparam& p = *static_cast<Sparam* >(param);
 
     // Create multi_array reference to y and f
     typedef boost::multi_array_ref<const double,2> CSTmatref_type;
     typedef boost::multi_array_ref<double,2> matref_type;
-    
     typedef CSTmatref_type::index indexref;
-
-    // The distribution is in the first (p.max1 * p.max2) entries
-    // The final entry is Z.
-    CSTmatref_type yref(y, boost::extents[p.max1][p.max2]);
-    matref_type    fref(f, boost::extents[p.max1][p.max2]);
+    CSTmatref_type yref(y,boost::extents[p.max1][p.max2]);
+    matref_type fref(f,boost::extents[p.max1][p.max2]);
+    //fill(fref.data(),fref.data()+fref.num_elements(),0.0);
 
     // Compute fraction no-programmer
     double fraction_threshold = 0.05;
@@ -142,6 +144,7 @@ int dydt(double t, const double y[], double f[], void * param) {
       }
     }
 
+    // (3) Only print if fracNoProg > fraction_threshold
     if(p.verbose == 1 && fracNoProg > fraction_threshold) {
         std::cout << "t = " << t
                   << " | Fraction no-programmer (" 

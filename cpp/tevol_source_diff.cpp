@@ -44,10 +44,12 @@
      int max2 = stoi(argv[10]);
      int IC = stoi(argv[11]);
      int TEMPORAL = stoi(argv[12]);
- 
-     double t_max = (argc > 13) ? stod(argv[13]) : 1000.0;
- 
-     Sparam param = {mu, nu_n, nu_p, alpha, beta, k, x0, K, max1, max2};
+     // for debugging
+     int VERBOSE = stoi(argv[13]);
+
+     double t_max = (argc > 14) ? stod(argv[14]) : 1000.0;
+
+     Sparam param = {mu, nu_n, nu_p, alpha, beta, k, x0, K, max1, max2, VERBOSE};
  
      // Integrator parameters
      double t = 0.0;
@@ -72,7 +74,10 @@
      } else if (IC == 3) {
          y[max1 - 1][0] = 1.0; // large group, all non-programmers
          last_avg = 0.0;
-     } else {
+     } else if (IC == 4) {
+        y[35][0] = 1.0; // some ratio
+        last_avg = 0.0;
+    } else {
          cerr << "Invalid IC value.\n";
          return 1;
      }
@@ -83,60 +88,90 @@
      gsl_odeiv_control *control = gsl_odeiv_control_y_new(eps_abs, eps_rel);
      gsl_odeiv_evolve *evolve = gsl_odeiv_evolve_alloc(max1 * max2);
      gsl_odeiv_system sys = {dydt, NULL, static_cast<size_t>(max1 * max2), &param};
- 
-     // Integration loop
+
+     // What we'll track 
      double last0 = y[0][0];
      double diff = 1.0;
- 
-     for (double t_target = t + t_step; t_target < t_max; t_target += t_step) {
-         while (t < t_target) {
-             int status = gsl_odeiv_evolve_apply(evolve, control, step, &sys, &t, t_target, &dt, y.data());
-             if (status != GSL_SUCCESS) {
-                 cerr << "GSL integration failed.\n";
-                 return 1;
-             }
-         }
- 
-         if (TEMPORAL == 1) {
-             // Temporal output mode: dump full matrix every 10 steps
-             diff = abs(last0 - y[0][0]);
-             last0 = y[0][0];
- 
-             if (static_cast<int>(t) % 10 == 0) {
-                 for (int d1 = 0; d1 < max1; ++d1) {
-                     for (int d2 = 0; d2 < max2; ++d2) {
-                        //  cout << t << "," << d1 << "," << d2 << "," << y[d1][d2] << "\n";
-                     }
-                 }
-             }
- 
-         } else if (TEMPORAL == 0) {
-             // Equilibrium mode: track average fraction of programmers
-             double avg = 0.0;
-             for (int d1 = 0; d1 < max1; ++d1) {
-                 for (int d2 = 0; d2 < max2; ++d2) {
-                     if (d1 + d2 > 0)
-                         avg += (1.0 * d2) / (d1 + d2) * y[d1][d2];
-                 }
-             }
-             diff = abs(last_avg - avg);
-             last_avg = avg;
-         }
-     }
- 
-     // Final output (for equilibrium mode)
-     if (TEMPORAL == 0) {
-         double avg = 0.0;
-         for (int d1 = 0; d1 < max1; ++d1) {
-             for (int d2 = 0; d2 < max2; ++d2) {
-                 if (d1 + d2 > 0)
-                     avg += (1.0 * d2) / (d1 + d2) * y[d1][d2];
-             }
-         }
-         cout << t << "," << mu << "," << nu_n << "," << nu_p << ","
-              << alpha << "," << beta << "," << k << "," << x0 << ","
-              << K << "," << IC << "," << avg << "\n";
-     }
+
+     double costDeathsCum = 0.0;  // cumulative cost-based deaths
+     double t_prev = 0.0;         // track previous time for dt
+
+    // Main loop
+    for (double t_target = t + t_step; t_target < t_max; t_target += t_step) {
+        while (t < t_target) {
+            int status = gsl_odeiv_evolve_apply(evolve, control, step, &sys, &t, t_target, &dt, y.data());
+            if (status != GSL_SUCCESS) {
+                cerr << "GSL integration failed.\n";
+                return 1;
+            }
+        }
+
+        if (VERBOSE == 0) {
+
+            if (TEMPORAL == 1) {
+                
+                {
+                    double R_costDeath = 0.0;
+                    for (int d1 = 0; d1 < max1; ++d1) {
+                        for (int d2 = 0; d2 < max2; ++d2) {
+                            // outflow = tau(...) * d1 * cost(...) * y[d1][d2]
+                            double outRate = tau(param.alpha, param.beta, d1, d2, param.k, param.x0)
+                                            * d1
+                                            * cost(d1, d2, param.k, param.x0)
+                                            * y[d1][d2];
+                            R_costDeath += outRate;
+                        }
+                    }
+                    double dt_segment = (t - t_prev);
+                    costDeathsCum += R_costDeath * dt_segment;
+                    t_prev = t;
+                }
+
+                diff = fabs(last0 - y[0][0]);
+                last0 = y[0][0];
+
+                if (static_cast<int>(t) % 10 == 0) {
+                    // Dump full matrix plus the cumulative cost-based deaths
+                    for (int d1 = 0; d1 < max1; ++d1) {
+                        for (int d2 = 0; d2 < max2; ++d2) {
+                            cout << t << "," << d1 << "," << d2 << ","
+                                << y[d1][d2] << "," 
+                                << costDeathsCum << "\n";
+                        }
+                    }
+                }
+            }
+            else if (TEMPORAL == 0) {
+                // Equilibrium mode: track average fraction of programmers
+                double avg = 0.0;
+                for (int d1 = 0; d1 < max1; ++d1) {
+                    for (int d2 = 0; d2 < max2; ++d2) {
+                        if (d1 + d2 > 0) {
+                            avg += (1.0 * d2)/(d1 + d2) * y[d1][d2];
+                        }
+                    }
+                }
+                diff = fabs(last_avg - avg);
+                last_avg = avg;
+            }
+        }
+
+        // For equilibrium mode, print final aggregated line
+        if (TEMPORAL == 0) {
+            double avg = 0.0;
+            for (int d1 = 0; d1 < max1; ++d1) {
+                for (int d2 = 0; d2 < max2; ++d2) {
+                    if (d1 + d2 > 0) {
+                        avg += (1.0 * d2)/(d1 + d2) * y[d1][d2];
+                    }
+                }
+            }
+            cout << t << "," << mu << "," << nu_n << "," << nu_p << ","
+                << alpha << "," << beta << "," << k << "," << x0 << ","
+                << K << "," << IC << "," << avg << "\n";
+        }
+    }
+
  
      // Cleanup
      gsl_odeiv_evolve_free(evolve);
