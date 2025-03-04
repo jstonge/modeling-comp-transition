@@ -105,7 +105,7 @@
              if (static_cast<int>(t) % 10 == 0) {
                  for (int d1 = 0; d1 < max1; ++d1) {
                      for (int d2 = 0; d2 < max2; ++d2) {
-                         cout << t << "," << d1 << "," << d2 << "," << y[d1][d2] << "\n";
+                        //  cout << t << "," << d1 << "," << d2 << "," << y[d1][d2] << "\n";
                      }
                  }
              }
