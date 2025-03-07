@@ -14,3 +14,5 @@ pipeline/old1/
 figs/pipeline/old1/
 cpp/tmp_data_dir/
 
+.vscode/settings.json
+package-lock.json
