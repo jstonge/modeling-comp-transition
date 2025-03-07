@@ -5,7 +5,7 @@ import seaborn as sns
 
 # 1) Load data from CSV
 #    Format per line:  t, d1, d2, y[d1][d2], costDeathsCum
-data = np.genfromtxt("test.csv", delimiter=",")
+data = np.genfromtxt("new_hope.csv", delimiter=",")
 
 # 2) Extract columns into clearer names
 t_col    = data[:, 0]
@@ -13,6 +13,7 @@ d1_col   = data[:, 1].astype(int)
 d2_col   = data[:, 2].astype(int)
 y_col    = data[:, 3]
 cost_cum  = data[:, 4]  # costDeathsCum
+avg_progs  = data[:, 5]  # costDeathsCum
 
 
 unique_times = np.unique(t_col)
@@ -35,6 +36,22 @@ def plot_groups_wo_progs():
   plt.title("Fraction (or number) of Groups with No Programmers Over Time")
   plt.show()
 
+def plot_groups_w_progs():
+  """Plot 'mass in no-programmer states' vs. time"""
+  # For each time, sum the probability (or population) in states with d2 = 0
+  prog_values = []  # will store sum of y where d2=0
+  for t_val in unique_times:
+      # find rows for this time
+      mask = (t_col == t_val)
+      # sum over states that have d2=0
+      sum_no_prog = np.sum(y_col[mask & (d2_col == 0)])
+      prog_values.append(sum_no_prog)
+      
+  plt.plot(unique_times, prog_values)
+  plt.xlabel("Time")
+  plt.ylabel("Probability mass with programmers (d2=0)")
+  plt.title("Fraction (or number) of Groups with Programmers Over Time")
+  plt.show()
 
 def plot_cost_deaths_cum():
   """Plot costDeathsCum over time"""
@@ -54,7 +71,6 @@ def plot_cost_deaths_cum():
   plt.ylabel("Cumulative Cost-Based Deaths")
   plt.title("Evolution of Cost-Based Deaths Over Time")
   plt.show()
-
 
 def plot_prog_vs_nonprog_hm():
   # 2) Identify columns
@@ -102,7 +118,8 @@ def plot_prog_vs_nonprog_hm():
   ax.set_ylabel("number of non-programmers (d1)")
   ax.set_title(f"Final Distribution at t={t_final}")
 
-  plt.show()
+  plt.savefig("final.svg")
+  # plt.show()
 
 
 plot_cost_deaths_cum()

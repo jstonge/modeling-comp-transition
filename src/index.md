@@ -159,7 +159,7 @@ const β = view(Inputs.range([0.001, 0.11], {label: "β (prog benefit)", step:0.
         x: {label:"p/n"}, y: {label:"τ(n,p)"},
         marks: [
             Plot.line( d3.range(0, 1, 0.01), { 
-                x: x => x, y: x => -α + β*(1-c(x, k, 0.25)), stroke:"red" 
+                x: x => x, y: x => Math.exp(-α + β*(1-c(x, k, 0.25))), stroke:"red" 
                 }
             )
         ]

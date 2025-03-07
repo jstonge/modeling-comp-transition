@@ -3,3 +3,11 @@
 node_modules/
 yarn-error.log
 .venv/
+cpp/test*
+myenv/
+pipeline/old1/
+cpp/temp.csv
+.gitignore
+.gitignore
+output.pdf.png
+figs/pipeline/old1/results_160.parquet

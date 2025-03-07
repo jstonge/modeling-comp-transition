@@ -7,6 +7,8 @@ from matplotlib import colors
 from matplotlib.animation import FuncAnimation
 from matplotlib.animation import PillowWriter
 
+print("movie time")
+
 plt.rcParams["animation.html"] = "jshtml"
 
 #load data
@@ -38,6 +40,6 @@ def animate(i):
     return [im]
 
 #animation details
-fps = 30
+fps = 100
 anim = FuncAnimation(fig,animate,frames=len(t),interval=1000/fps)
 anim.save('movie2.gif', dpi=90)

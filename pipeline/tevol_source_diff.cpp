@@ -43,10 +43,9 @@
      int max1 = stoi(argv[9]);
      int max2 = stoi(argv[10]);
      int IC = stoi(argv[11]);
-     int TEMPORAL = atoi(argv[12]);
-    
+     int TEMPORAL = stoi(argv[12]);
      // for debugging
-     int VERBOSE = atoi(argv[13]);
+     int VERBOSE = stoi(argv[13]);
 
      double t_max = (argc > 14) ? stod(argv[14]) : 1000.0;
 
@@ -55,8 +54,7 @@
      // Integrator parameters
      double t = 0.0;
      double dt = 0.1;
-    //  double t_step = 0.001;
-     double t_step = 0.5;
+     double t_step = 1.0;
      const double eps_abs = 1e-6;
      const double eps_rel = 1e-8;
  
@@ -92,15 +90,14 @@
      gsl_odeiv_system sys = {dydt, NULL, static_cast<size_t>(max1 * max2), &param};
 
      // What we'll track 
-     double last0 = 0.0;
+     double last0 = y[0][0];
      double diff = 1.0;
 
      double costDeathsCum = 0.0;  // cumulative cost-based deaths
      double t_prev = 0.0;         // track previous time for dt
 
     // Main loop
-    for (double t_target = t + t_step; t < t_max; t_target += t_step) {
-    // for (double t_target = t + t_step; diff > 1e-6; t_target += t_step) {
+    for (double t_target = t + t_step; t_target < t_max; t_target += t_step) {
         while (t < t_target) {
             int status = gsl_odeiv_evolve_apply(evolve, control, step, &sys, &t, t_target, &dt, y.data());
             if (status != GSL_SUCCESS) {
@@ -109,37 +106,53 @@
             }
         }
 
-        double avg_progs = 0.0;
-        for (int d1 = 0; d1 < max1; ++d1) {
-            for (int d2 = 0; d2 < max2; ++d2) {
-                if(d1+d2>K) continue;
-                avg_progs += d2*y[d1][d2];
-            }
-        }
-                
-
-        diff = fabs(last0 - avg_progs);
-        last0 = avg_progs;
-
         if (VERBOSE == 0) {
 
             if (TEMPORAL == 1) {
-                // Dump full matrix plus the cumulative cost-based deaths
-                for (int d1 = 0; d1 < max1; ++d1) {
-                    for (int d2 = 0; d2 < max2; ++d2) {
-                        if(d1+d2<=K) {
+                
+                {
+                    double R_costDeath = 0.0;
+                    for (int d1 = 0; d1 < max1; ++d1) {
+                        for (int d2 = 0; d2 < max2; ++d2) {
+                            // outflow = tau(...) * d1 * cost(...) * y[d1][d2]
+                            double outRate = tau(param.alpha, param.beta, d1, d2, param.k, param.x0)
+                                            * d1
+                                            * cost(d1, d2, param.k, param.x0)
+                                            * y[d1][d2];
+                            R_costDeath += outRate;
+                        }
+                    }
+                    double dt_segment = (t - t_prev);
+                    costDeathsCum += R_costDeath * dt_segment;
+                    t_prev = t;
+                }
+
+                diff = fabs(last0 - y[0][0]);
+                last0 = y[0][0];
+
+                if (static_cast<int>(t) % 10 == 0) {
+                    // Dump full matrix plus the cumulative cost-based deaths
+                    for (int d1 = 0; d1 < max1; ++d1) {
+                        for (int d2 = 0; d2 < max2; ++d2) {
                             cout << t << "," << d1 << "," << d2 << ","
                                 << y[d1][d2] << "," 
-                                << y[max1-1][max2-1] << "," << avg_progs << "\n";
+                                << costDeathsCum << "\n";
                         }
-                        else cout << t << "," << d1 << "," << d2 << ","
-                                << 0.0 << "," 
-                                << y[max1-1][max2-1] << "," << avg_progs << "\n";
                     }
                 }
-                /*cout << t << "," << mu << "," << nu_n << "," << nu_p << ","
-                << alpha << "," << beta << "," << k << "," << x0 << ","
-                << K << "," << IC << "," << y[max1-1][max2-1] << "," << avg_progs << "\n";*/
+            }
+            else if (TEMPORAL == 0) {
+                // Equilibrium mode: track average fraction of programmers
+                double avg = 0.0;
+                for (int d1 = 0; d1 < max1; ++d1) {
+                    for (int d2 = 0; d2 < max2; ++d2) {
+                        if (d1 + d2 > 0) {
+                            avg += (1.0 * d2)/(d1 + d2) * y[d1][d2];
+                        }
+                    }
+                }
+                diff = fabs(last_avg - avg);
+                last_avg = avg;
             }
         }
 
@@ -155,7 +168,7 @@
             }
             cout << t << "," << mu << "," << nu_n << "," << nu_p << ","
                 << alpha << "," << beta << "," << k << "," << x0 << ","
-                << K << "," << IC << "," << avg << "," << y[max1-1][max2-1]  << "\n";
+                << K << "," << IC << "," << avg << "\n";
         }
     }
 
