@@ -1,6 +1,6 @@
 import duckdb
 
-conn = duckdb.connect("../param_sweep.duckdb")
+conn = duckdb.connect("./param_sweep.duckdb")
 
 # Create a table to hold (alpha,beta,...) plus status or references to output
 conn.execute("""

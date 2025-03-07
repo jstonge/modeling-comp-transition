@@ -45,7 +45,7 @@ def run_one_model(args):
     
     return (row_id, alpha_val, beta_val, fraction_prog, cost_deaths)
     
-conn = duckdb.connect("../param_sweep.duckdb")
+conn = duckdb.connect("./param_sweep.duckdb")
     
 # 1) Fetch undone rows into a Python list
 rows = conn.execute("""

@@ -1,0 +1,3 @@
+# Pipeline
+
+Same code than in `cpp/`, but organized such that we can run large parameter sweep in a parallel fashion. The end goal is plot the phasespace for beta and alpha.
