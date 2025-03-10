@@ -4,7 +4,7 @@ import pyarrow as pa
 import pyarrow.parquet as pq
 import sys
 
-DAT_DIR = Path(".")
+DAT_DIR = Path("src/")
 
 dfs = []
 for mydir in DAT_DIR.glob("*_data_dir"):
