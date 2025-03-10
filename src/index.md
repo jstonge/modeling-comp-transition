@@ -5,12 +5,18 @@ sql:
 
 # Modeling Comp Transition
 
-We show some results that we have so far. Recall the procedure is as follows; we start in the equilibrium state without much programming, then look at conditions under which we get to state with programmers. 
-- `cumulative death`: We keep track of how many people leave the system because as a result of a fail transition. 
-- `avgProgs`: We also keep track how long does it take to transition to the equilibrium state with programmers. Once they get there, we check the average number of programmers in the system. 
-- We want to demonstrate the potential following **tradeoff**:
-    - On the one hand, what if transitioning too fast lead to more or less people in the system. Groups might want to transition fast because it increases their benefits. But if they transition too fast, they do not leave the space for members to learn to code. More people will be left out in the transition, but since people keep flowing in groups might be willing to adopt that strategy. 
-    - Alternatively, groups could slow down the transitions, thereby leaving time for people to learn to code. In doing so, we might see smaller cumulative deaths for the same number of programmers. 
+We show some results that we have so far. Recall the procedure is as follows; 
+- We start in the equilibrium state without programmers, then look at conditions under which we get to state with programmers. We want to get out of the first state, while accomplishing the following objectives:
+    - Reduce number of sacrifice students in the transition
+    - Do the transitions as quickly as possible
+- We might expect the following **tradeoff**. Conceptually
+    - On the one hand, if groups transition too fast, they would not leave the space for members to learn to code. More people will be left out in the transition, but since people keep flowing in, groups can still make the transition. Not nice for individuals. Hypothesis: _faster transition lead to more sacrificed people_.
+    - Alternatively, groups could slow down the transitions, thereby leaving time for people to learn to code. In doing so, we might see smaller cumulative deaths for the same number of programmers, even it takes longer.  Hypothesis: _longer transition lead to fewer sacrificed people_.
+    - Q: How can groups balance the objectives to both try to make transition as fast as possible while minimizing number of sacrificed people?
+- We have the following key variables.
+    - `cumulative death`: We keep track of how many people leave the system because as a result of a fail transition. 
+    - `avgProgs`: We check the final fraction of programmers in the system.
+    - `Time to finish transition`: The naive way is just to look at last value when the system reach equilibrium. But as know, under certain conditions it takes a while, meaning that more people will keep trying and failing even though the system is almost at equilibrium. One way out is to stop early, say when the system reach 95th percentile of the final fraction of programmers. We offer that widget below. We say more on how we do that in the detailed summary below.
 
 
 <small>
@@ -19,9 +25,6 @@ We show some results that we have so far. Recall the procedure is as follows; we
     <h4>The model and initial conditions</h4>
     <ul>
         <li>Learning to code entails an individual cost. When it is too costly, people try and fail (and leave the system). The cost function is dependent on the number of programmers groups. The form to be a sigmoid where we play with _k_ (the steepneess of the slope) and _x0_ (its midpoint).</li>
-        <li>We also show how those values change with <em>k</em>, the slope of the cost function:</li>
-            ${cost_function_plot()}
-            ${x0Input}
         <li>We always start with large research groups at equilibrium with 35 non-progs and 0 programmer. We are interested into transient dynamics towards an alternative stable state with programmers.</li>
     </ul>
     <h4>What counts as 'finishing' the transition?</h4>
@@ -34,7 +37,7 @@ We show some results that we have so far. Recall the procedure is as follows; we
 </small>
  
 
-To find this tradeoff, we start by looking at `time to finish transition` on the x-axis, with `cumulative deaths` and final `average programmers` on the y-axis.  We start with a small (=30) and large (=53) beta to explain the plots:
+To find this tradeoff, we start by looking at `time to finish transition` on the x-axis, with `cumulative deaths` and final `average programmers` on the y-axis.  We start with a small (=30) and large (=53) beta to explain the plots. We focus on the effect of the cost function in the interpretation of this plot
 
 ```sql id=[...raw_data]
 WITH unique_avgProgs AS (
@@ -54,8 +57,8 @@ FROM data d;
 ```
 
 ```js
-let mydata = raw_data.filter(d => [3,6].includes(d.k) & [30,53].includes(d.beta))
-let mydata2 = raw_data.filter(d => [1,3,6,15].includes(d.k) & [30,40,42,44,46, 53].includes(d.beta))
+let mydata = raw_data.filter(d => [3,6].includes(d.k) & [30,52].includes(d.beta))
+let mydata2 = raw_data.filter(d => [3,6].includes(d.k) & [30,40,42,44,46, 53].includes(d.beta))
 let mydata3 = raw_data.filter(d => [1,3,6,15].includes(d.k))
 ```
 
@@ -63,18 +66,21 @@ let mydata3 = raw_data.filter(d => [1,3,6,15].includes(d.k))
 let thresh = view(Inputs.range([0.8,1], {
     value: 1.0, step:0.01, label: "precentile removed (this will impact both plots below)"
 }))
+let do_facet = view(Inputs.toggle({label: 'facet', value: true}))
 ```
 <div class="grid grid-cols-2">
     <div>
-    ${simple1(mydata, {width: 600})}
-    ${simple2(mydata, {width: 600})}
+    ${simple1(mydata, {width: 600, facet: do_facet})}
+    ${simple2(mydata, {width: 600, facet: do_facet})}
+    We provide the option to play with the finishing procedure (see details for explanation). For instance, what if we consider the transition finished when we reach 95% of the final fraction of programmers? In this case, we can see that the cumulative deaths for low beta (=30) is now lower than that of high beta (=53).
     </div>
     <div>
         <ul>
-        <small>
-            <li>Color is the coding benefit. Larger means it is more beneficial. Alpha, non-programmers benefits, is fixed at 10</li>
-            <li>In this case, a gentler slope (<em>k=3</em>) seems favorable, as we end up with as many programmers, but much fewer deaths.  </li>
-        </small>
+        <li>Dark red means large coding benefit, while dark blue means low coding benefits. We kept so far non-programmers benefits, alpha, fixed at 10.</li>
+        <li>We vary the slope of the cost function. In this case, a gentler slope (<em>k=3</em>) seems favorable, as we end up with as many programmers, but much fewer deaths than <em>k=6</em>. Does it make sense? With very larger beta (=50) and the plot is unfacetted, we note that the cumulative deaths is similar at first, until we get around 15 programmers. Then, for the gentler slope, we get saturate at around 60 cumulative death. The learning cost with k=3 with 15 progs on a team of, say, 33 is ${c(15/33, 3, 0.05).toFixed(2)}  (versus ${c(15/33, 6, 0.05).toFixed(2)} for k=6) , meaning that the group benefit in this scenario is ${tau(10,53,15/33,3,0.05).toFixed(2)} for k=3 (versus ${tau(10,53,15/33,6,0.05).toFixed(2)} for k=6). At this point, both the group benefit and cost is higher for k=3, meaning the impetus is... stronger? Ok yeah, then as a results, k=3 reach its equilibrium first, reducing the cumulative deaths.  </li>
+        <li>We also show how those values change with <em>k</em>, the slope of the cost function:</li>
+        ${cost_function_plot()}
+        ${x0Input}
         </ul>
     </div>
 </div>
@@ -83,21 +89,79 @@ let thresh = view(Inputs.range([0.8,1], {
 const x0Input = Inputs.range([0.05, 0.5], {label:"x0", step:0.01, value: 0.05})
 const x0 = Generators.input(x0Input);
 ```
-We provide the option to play with the finishing procedure (see details for explanation). For instance, what if we consider the transition finished when we reach 95% of the final fraction of programmers? In this case, we can see that the cumulative deaths for low beta (=30) is now lower than that of high beta (=53
+
+```js
+function simple1(data, {width, facet} = {}) {
+    return Plot.plot({
+        height: 300,
+        width,
+        color: {legend: true, type: 'linear'},
+        grid: true,
+        y: {type: do_log_simple ? 'log' : 'linear', label : 'cumulative deaths'}, 
+        x: {label: null},
+        marks: [
+            Plot.frame(),
+            Plot.line(data, {
+                x: 'time',  y: 'cost',  stroke: facet ? "beta" : null, strokeOpacity: 0.3, fx:  facet ? 'k' : null, tip:true
+            }),
+            facet ? 
+                null : 
+                Plot.ruleX([0.23], {stroke:'red'}) ,
+            Plot.dot(data, {
+                x: 'time', y: 'cost', 
+                fill: d => d.avgProgs_percentile <= thresh ? d.beta : null, 
+                r: 2, 
+                fx: facet ? 'k' : null, 
+                symbol: "k"
+            }
+            )
+        ]
+    })
+}
+
+function simple2(data, {width, facet} = {}) {
+    return Plot.plot({
+        height: 300,
+        width,
+        color: {type: 'linear'},
+        grid: true,
+        y: {label : 'average Progs'}, 
+        x: {label: 'time to finish transition'},
+        caption: 'Symbols: Circle (k=3); Cross (k=6)',
+        marks: [
+            Plot.frame(),
+            facet ? 
+                null : 
+                Plot.ruleX([0.23], {stroke:'red'}) ,
+            Plot.line(data, {
+                x: 'time',  y: 'avgProgs',  stroke:  facet ? "beta" : null, strokeOpacity: 0.3, fx:  facet ? 'k' : null
+            }),
+            Plot.dot(data, {
+                x: 'time', y: 'avgProgs', 
+                fill: d => d.avgProgs_percentile <= thresh ? d.beta : null, 
+                r: 2, 
+                fx: facet ? 'k' : null, 
+                symbol: "k"
+                }
+            )
+        ]
+    })
+}
+```
 
 ## More Betas
 
-
+We now look at the effect of more betas. 
 ```js
 let do_log_simple = view(Inputs.toggle({label: 'log yaxis'}))
 ```
 
 ```js
-simple1(mydata2, {width: 1200})
+simple1(mydata2, {width: 1200, facet: true})
 ```
 
 ```js
-simple2(mydata2, {width: 1200})
+simple2(mydata2, {width: 1200, facet: true})
 ```
 
 ## State space(ish)
@@ -311,49 +375,6 @@ Below we show a couple of movie of what different time dynamics feel like for pa
 <!-- APPENDIX -->
 
 ```js
-function simple1(data, {width} = {}) {
-    return Plot.plot({
-        height: 300,
-        width,
-        color: {legend: true, type: 'linear'},
-        grid: true,
-        y: {type: do_log_simple ? 'log' : 'linear', label : 'cumulative deaths'}, 
-        x: {label: null},
-        marks: [
-            Plot.frame(),
-            Plot.line(data, {
-                x: 'time',  y: 'cost',  stroke: "beta", strokeOpacity: 0.3, fx: 'k', tip:true
-            }),
-            Plot.dot(data, {
-                x: 'time', y: 'cost', 
-                fill: d => d.avgProgs_percentile <= thresh ? d.beta : null, r: 2, fx: 'k'
-            }
-            )
-        ]
-    })
-}
-
-function simple2(data, {width} = {}) {
-    return Plot.plot({
-        height: 300,
-        width,
-        color: {type: 'linear'},
-        grid: true,
-        y: {label : 'average Progs'}, 
-        x: {label: 'time to finish transition'},
-        marks: [
-            Plot.frame(),
-            Plot.line(data, {
-                x: 'time',  y: 'avgProgs',  stroke: "beta", strokeOpacity: 0.3, fx: 'k'
-            }),
-            Plot.dot(data, {
-                x: 'time', y: 'avgProgs', 
-                fill: d => d.avgProgs_percentile <= thresh ? d.beta : null, r: 2, fx: 'k'
-                }
-            )
-        ]
-    })
-}
 
 function cost_function_plot() {
     return Plot.plot({
