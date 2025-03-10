@@ -58,7 +58,7 @@ FROM data d;
 
 ```js
 let mydata = raw_data.filter(d => [3,6].includes(d.k) & [30,52].includes(d.beta))
-let mydata2 = raw_data.filter(d => [3].includes(d.k) & [30,40,42,44,46, 53].includes(d.beta))
+let mydata2 = raw_data.filter(d => [3].includes(d.k) & [29,36,37,38,39,40,41,42,43,44,46,53].includes(d.beta))
 let mydata3 = raw_data.filter(d => [1,3,6,15].includes(d.k))
 ```
 
@@ -102,7 +102,7 @@ function simple1(data, {width, facet} = {}) {
         marks: [
             Plot.frame(),
             Plot.line(data, {
-                x: 'time',  y: 'cost',  stroke: facet ? "beta" : null, strokeOpacity: 0.3, fx:  facet ? 'k' : null, tip:true
+                x: 'time',  y: 'cost',  stroke: facet ? "beta" : null, strokeOpacity: 0.3, fx:  facet ? 'k' : null
             }),
             facet ? 
                 null : 
@@ -112,7 +112,8 @@ function simple1(data, {width, facet} = {}) {
                 fill: d => d.avgProgs_percentile <= thresh ? d.beta : null, 
                 r: 2, 
                 fx: facet ? 'k' : null, 
-                symbol: "k"
+                symbol: "k",
+                tip:true
             }
             )
         ]
@@ -141,7 +142,8 @@ function simple2(data, {width, facet} = {}) {
                 fill: d => d.avgProgs_percentile <= thresh ? d.beta : null, 
                 r: 2, 
                 fx: facet ? 'k' : null, 
-                symbol: "k"
+                symbol: "k",
+                tip:true
                 }
             )
         ]
@@ -172,7 +174,7 @@ let do_log_simple = view(Inputs.toggle({label: 'log yaxis'}))
         marks: [
                 Plot.dot(foo.filter(d => d.k==3), {x: 'beta', y: 'costDeathsCum', fill: "beta", tip: true }),
                 Plot.dot(foo.filter(d => d.k==6), {x: 'beta', y: 'costDeathsCum', fill: "beta", fillOpacity: 0.3 }),
-                Plot.ruleX([22, 36, 44], {strokeDasharray: 3}),
+                Plot.ruleX([22, 36, 46], {strokeDasharray: 3}),
                 Plot.frame()
             ]
         })
@@ -184,10 +186,10 @@ let do_log_simple = view(Inputs.toggle({label: 'log yaxis'}))
         y: {grid: true},
         caption: "k=3; x0=0.05. The dots with low opacity is actually k=6.",
         marks: [
-            Plot.text([`People try,\nbut no transition`, `Successful\ntransition`], {x:[29, 52], y:[20,10], fontSize:18}),
-            Plot.dot(foo.filter(d => d.k==3), {x: 'beta', y: 'avgProgs', fill: "beta" }),
+            Plot.text([`People try,\nbut no transition`, `Successful\ntransition`], {x:[29, 53], y:[20,10], fontSize:18}),
+            Plot.dot(foo.filter(d => d.k==3), {x: 'beta', y: 'avgProgs', fill: "beta", tip: true }),
             Plot.dot(foo.filter(d => d.k==6), {x: 'beta', y: 'avgProgs', fill: "beta", fillOpacity: 0.3 }),
-            Plot.ruleX([22, 36, 44], {strokeDasharray: 3}),
+            Plot.ruleX([22, 36, 46], {strokeDasharray: 3}),
             Plot.frame()
             ]
         })
@@ -195,14 +197,39 @@ let do_log_simple = view(Inputs.toggle({label: 'log yaxis'}))
     </div>
 </div>
 
-So basically, we see that 
+Okay, where is the tradeoff? Lets start with the worst outcome, _β=39_. At this point, the benefits of learning to code is interesting enough that many people try and fail to learn to code, but we ultimately end up with not that many programmers (AvgProgs around 16.89). That is, we end up with a very long bistable states, which doesn't show up here because we take the average (see below for the gif of that sequence). With _β=46_, we can see that the transition is faster, and that we do have fewer cumulative deaths as a result. Is that what we were looking for?!
+
+### GIFs
+
+Below we show a couple of movie of what different time dynamics feel like for particular set of parameters. 
+
+<div class="grid grid-cols-3">
+    <div>
+        <img src="./movie/a10_b60_k3_x0.05.gif" alt="gif results">
+        <small><em>Large beta, moderate k, small x0</em></small><br>
+        <small>μ   νn   νp   α    β   k   x0   K 10 11 12 TEMP LOG tmax</small><br>
+        <small>100 10 10 10 60 3 0.05 40 40 40 4 1 0 1000</small>
+    </div>
+    <div>
+        <img src="./movie/alpha10_beta39_k3_x0.05.gif" alt="gif results">
+        <small><em>Large beta, moderate k, small x0</em></small><br>
+        <small>μ   νn νp  α  β   k   x0   K 10 11 12 TEMP LOG tmax</small><br>
+        <small>100 10 10 10 39 3 0.05 40 40 40 4 1 0 1000</small>
+    </div>
+    <div>
+        <img src="./movie/a10_b46_k3_x0.05.gif" alt="gif results">
+        <small><em>Large beta, moderate k, small x0</em></small><br>
+        <small>μ   νn νp  α  β   k   x0   K 10 11 12 TEMP LOG tmax</small><br>
+        <small>100 10 10 10 46 3 0.05 40 40 40 4 1 0 1000</small>
+    </div>
+</div>
 
 
 ## State space(ish)
 
 Ok, now we are doing something different. Lets try to put on the x-axis cumulative death and on the y-axis the average number of programmers. I find it requires a bit more love to like it. But the idea is that because we are looking at cumulative deaths, we are looking at time but the ticks show how many people have left the system. If you try beta=55, you'll see, as before, that the system transitionned fast into state with many programmers as it goes straight up and it doesn't get far on the right.
 
-We also introduce a second plot (right), where we only look at the equilibrium state (think about it as a roadmap for the plot on the left). In this plot, we can see how moderate value of beta lead to most people leaving the system; programming is valuable enough that people try it, but not enough that the cost is minimized (is that right? Im asking to myself). If we look back to the previous plot, we can see that the early stopping of the k=3.
+We also introduce a second plot (right), where we only look at the equilibrium state (think about it as a roadmap for the plot on the left). In this plot, we can see how moderate value of beta lead to most people leaving the system; programming is valuable enough that people try it, but not enough that the cost is minimized (is that right? Im asking to myself). If we look back to the previous plot, we can see that the early stopping of the _k=3_.
 
 ```sql id=[...foo]
 SELECT 
@@ -380,24 +407,6 @@ The plot on the RHS is a kind of a map to know where we are. Instead of looking 
 
 
 
-
-
-### GIFs
-
-Below we show a couple of movie of what different time dynamics feel like for particular set of parameters. 
-
-<div class="grid grid-cols-3">
-    <div>
-    <img src="./movie/a10_b60_k3_x0.05.gif" alt="gif results">
-    <small><em>Large beta, moderate k, small x0</em></small><br>
-    <small>μ   νn   νp   α    β   k   x0   K 10 11 12 TEMP LOG tmax</small><br>
-    <small>100 10 10 10 60 3 0.05 40 40 40 4 1 0 100</small>
-    </div>
-    <div>
-    </div>
-    <div>
-    </div>
-</div>
 
 
 ## More ideas

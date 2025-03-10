@@ -56,8 +56,8 @@
      double t = 0.0;
      double dt = 0.1;
     //  double t_step = 0.001;
-    //  double t_step = 0.01;
-     double t_step = 0.5;
+     double t_step = 0.01;
+    //  double t_step = 0.5;
      const double eps_abs = 1e-6;
      const double eps_rel = 1e-8;
  
@@ -100,8 +100,8 @@
      double t_prev = 0.0;         // track previous time for dt
 
     // Main loop
-    for (double t_target = t + t_step; t < t_max; t_target += t_step) {
-    // for (double t_target = t + t_step; diff > 1e-6; t_target += t_step) {
+    // for (double t_target = t + t_step; t < t_max; t_target += t_step) {
+    for (double t_target = t + t_step; diff > 1e-6; t_target += t_step) {
         while (t < t_target) {
             int status = gsl_odeiv_evolve_apply(evolve, control, step, &sys, &t, t_target, &dt, y.data());
             if (status != GSL_SUCCESS) {
