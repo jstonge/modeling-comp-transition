@@ -195,6 +195,8 @@ function phase_space_plot() {
 }
 ```
 
+When the plot on the RHS is normalized by time, we actually something interesting; the rate at which people leave the system. For instance, if unnormalized, we see a large difference in cumulative death of _k=3_ and _k=6_, with smaller _k_ having much fewer deaths. But once we normalize, we see that, for moderate values of betas, they are aligned; that is, even though the transition for _k=3_ is faster, there not fewer death as a results.  
+
 ## Beyond simplicity: the hydra plot
 
 TBD if this is a good plot. It is pretty wild. As before, as you go farther right, more people left the system (depending on how we define equilibrium state). As you go up, you have more programmers. 
