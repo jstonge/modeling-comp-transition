@@ -4,6 +4,7 @@ sql:
 ---
 
 # Modeling Comp Transition
+## Introduction
 
 We show some results that we have so far. Recall the procedure is as follows; 
 - We start in the equilibrium state without programmers, then look at conditions under which we get to state with programmers. We want to get out of the first state, while accomplishing the following objectives:
@@ -36,6 +37,9 @@ We show some results that we have so far. Recall the procedure is as follows;
     </details>
 </small>
  
+Ok, lets look at some plots.
+
+## Plot explainer
 
 To find this tradeoff, we start by looking at `time to finish transition` on the x-axis, with `cumulative deaths` and final `average programmers` on the y-axis.  We start with a small (=30) and large (=53) beta to explain the plots. We focus on the effect of the cost function in the interpretation of this plot
 
@@ -197,7 +201,9 @@ let do_log_simple = view(Inputs.toggle({label: 'log yaxis'}))
     </div>
 </div>
 
-Okay, where is the tradeoff? Lets start with the worst outcome, _β=39_. At this point, the benefits of learning to code is interesting enough that many people try and fail to learn to code, but we ultimately end up with not that many programmers (AvgProgs around 16.89). That is, we end up with a very long bistable states, which doesn't show up here because we take the average (see below for the gif of that sequence). With _β=46_, we can see that the transition is faster, and that we do have fewer cumulative deaths as a result. Is that what we were looking for?!
+Okay, where is the tradeoff? Lets start with the worst outcome in terms of cumulative deaths, _β=39_. At this point, the benefits of learning to code is interesting enough that many people try and fail to learn to code, but we ultimately end up with not that many programmers (AvgProgs around 16.89). That is, we end up with a very long bistable states, which doesn't show up here because we take the average (see below for the gif of that sequence). _β=36_ is pretty bad too. You don't even start transitioning for real, but it is attractive enough that people do try and fail. In my view, even though we have fewer cumulative deaths than _β=36_, we have even less to show for in terms of average number of programmers (avgProgs= 9.10 versus 16.8). Almost half of programmers, for as many sacrificed people.
+
+Now, with _β=46_, we can see that the transition is faster, and that we do have fewer cumulative deaths as a result. Remember, we hypothesized that, actually, faster transition time would lead to more sacrificed people, as if groups are pressuring individuals. Overall, if we see a transition, usually the faster the better (fewer people sacrificed). Is there a case where a _longer transition_ ever payoff? Well, technically, _β=39_ has a longer transition and fewer deaths than _β=36_, so I guess it counts? 
 
 ### GIFs
 
