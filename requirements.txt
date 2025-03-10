@@ -2,8 +2,6 @@ numpy
 matplotlib
 scipy
 seaborn
-numba
-duckdb
 fastparquet
 tqdm
 pyarrow
