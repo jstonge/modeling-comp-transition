@@ -58,7 +58,7 @@ FROM data d;
 
 ```js
 let mydata = raw_data.filter(d => [3,6].includes(d.k) & [30,52].includes(d.beta))
-let mydata2 = raw_data.filter(d => [3,6].includes(d.k) & [30,40,42,44,46, 53].includes(d.beta))
+let mydata2 = raw_data.filter(d => [3].includes(d.k) & [30,40,42,44,46, 53].includes(d.beta))
 let mydata3 = raw_data.filter(d => [1,3,6,15].includes(d.k))
 ```
 
@@ -151,18 +151,46 @@ function simple2(data, {width, facet} = {}) {
 
 ## More Betas
 
-We now look at the effect of more betas. 
+Ok, previously we kind of focused on the effect of the learning cost slope. We were surprised by it. We now look at the effect of betas. On the right, we look at the state space. For instance, we can see that cumulative deaths is maximized at beta of around 39. On the LFS, we can see indeed that it is the longest transition (on the right, we only plot the last value, regardless of the filtering based on percentile. I might fix later.)
+
 ```js
 let do_log_simple = view(Inputs.toggle({label: 'log yaxis'}))
 ```
 
-```js
-simple1(mydata2, {width: 1200, facet: true})
-```
-
-```js
-simple2(mydata2, {width: 1200, facet: true})
-```
+<div class="grid grid-cols-2">
+<div>
+${simple1(mydata2, {width: 600, facet: true})}
+${simple2(mydata2, {width: 600, facet: true})}
+</div>
+<div>
+<ul>
+<br><br>
+${
+Plot.plot({
+    height: 300,
+    width: 600,
+    y: {grid: true},
+    marks: [
+            Plot.dot(foo.filter(d => d.k==3), {x: 'beta', y: 'costDeathsCum', fill: "beta", tip: true }),
+            Plot.frame()
+        ]
+    })
+}
+<br>
+${
+    Plot.plot({
+    height: 300,
+    width: 600,
+    y: {grid: true},
+    marks: [
+            Plot.dot(foo.filter(d => d.k==3), {x: 'beta', y: 'avgProgs', fill: "beta" }),
+            Plot.frame()
+        ]
+    })
+}
+</ul>
+</div>
+</div>
 
 ## State space(ish)
 
@@ -175,6 +203,8 @@ SELECT
     d.beta::INT as beta, 
     d.k::INT as k, 
     d.*, 
+    d.time,
+    d.costDeathsCum,
     d.costDeathsCum / NULLIF(d.time, 0) AS costDeathsCum_norm
 FROM data d
 WHERE d.time = (
