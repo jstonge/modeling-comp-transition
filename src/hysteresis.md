@@ -1,5 +1,12 @@
-# Hysteresis in ecology
+---
+sql:
+    data: hysteresis-data.parquet
+    tradeoffData: tradeoff.parquet
+---
 
+# Hysteresis
+
+## In ecology
 
 In ecology, alternative stable states are important because they can lead to drastic changes in the ecosystem even with small perturbations, which cannot be undone easily. 
 
@@ -56,3 +63,95 @@ ax^3+bx^2+cx+d=0
 ```
 
 And the thing, as he say, is that you cannot get hysteresis with an equation of a lower order.
+
+## In humanities?
+
+_Intuitively (or naively), our small perturbations here would be that we increase the benefits to code which cannot be undone easily. Assume that the context is that humanities start valuing way too much 'computational approach' at the expense of domain expertise. Say that in philosophy, a hiring committee could  favor of someone who know a fair bit of programming over someone who has deep knowledge of Plato, but know nothing of programming. In this story, X is number of programmers in the system, while b is the parameter condition (like benefits to learn coding). As you add more benefits, nothing might happen for a while to the state of the system. But as you hit a critical threshold, you bifurcate to a new fixed point of programmers that is much higher than the previous one ('catastrophe' event). Unfortunately, as the story goes, to get get back to your favored equilibrium you need to 'remove' much more benefit (say by increasing the benefit of non-programmers) from the system than what has been allowed before._
+
+All that being said, right now we don't have a third order expression. So it won't work. 
+
+Here's the raw data
+
+```sql id=[...betaData]
+WITH ranked_data AS (
+    SELECT 
+        d.beta::INT as beta, 
+        d.k::INT as k,  
+        d.avgProgs,
+        d.costDeathsCum,
+        d.time,
+        d.costDeathsCum / NULLIF(d.time, 0) AS costDeathsCum_norm,
+        ROW_NUMBER() OVER (PARTITION BY d.beta, d.k ORDER BY d.time DESC, d.avgProgs) AS rn
+    FROM tradeoffData d
+    WHERE d.beta > 10 AND d.k = 3 
+)
+SELECT beta, k, avgProgs, costDeathsCum, time, costDeathsCum_norm
+FROM ranked_data
+WHERE rn = 1
+ORDER BY beta;
+```
+
+
+```js
+Inputs.table(betaData, {width: 650})
+```
+
+Lets look at steady states for increasing programmer benefits for fun. 
+
+```js
+Plot.plot({
+  y: {grid: true},
+    marks: [
+        Plot.dot(betaData, {
+            x: 'beta', y: 'avgProgs'
+        }),
+        Plot.ruleY([0])
+    ]
+})
+```
+
+The cumulative death is fun too
+
+```js
+Plot.plot({
+    y: {grid: true},
+    caption: "x0=0.05; k=3",
+    marks: [
+        Plot.dot(betaData, {x: 'beta', y: 'costDeathsCum'}),
+        Plot.ruleY([0])
+    ]
+})
+```
+
+The normalized version is fun too
+
+```js
+Plot.plot({
+    y: {grid: true},
+    caption: "x0=0.05; k=3",
+    marks: [
+        Plot.dot(betaData, {x: 'beta', y: 'costDeathsCum_norm'}),
+        Plot.ruleY([0])
+    ]
+})
+```
+
+Ok then, what if we look at a change in _k_ (steepness of cost function)
+
+```sql id=[...hystData]
+SELECT * FROM data
+```
+
+```js
+Plot.plot({
+  y: {grid: true},
+  caption: "x0=0.05; beta=40",
+  marks: [
+        Plot.dot(hystData, {
+            x: 'k', y: 'avgProgs'
+        }),
+        Plot.ruleY([0])
+    ]
+})
+```
+

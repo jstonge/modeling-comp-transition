@@ -2,7 +2,7 @@ import pandas as pd
 from pathlib import Path
 import pyarrow as pa
 import pyarrow.parquet as pq
-import sys
+import sys 
 
 # DAT_DIR = Path("src/")
 
@@ -25,9 +25,9 @@ import sys
 # df['time_scaled'] = (df['time'] * scale_factor).astype(int)
 # df = df[df['time_scaled'] % int(0.03 * scale_factor) == 0].drop(columns=['time_scaled']).reset_index(drop=True)
 
-# df.to_csv("tradeoff.csv", index=False)
+# df.to_parquet("src/tradeoff.parquet")
 
-df = pd.read_csv("src/tradeoff.csv")
+df = pd.read_parquet("src/tradeoff.parquet")
 
 buf = pa.BufferOutputStream()
 table = pa.Table.from_pandas(df)
