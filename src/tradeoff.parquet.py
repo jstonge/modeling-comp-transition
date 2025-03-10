@@ -3,9 +3,8 @@ from pathlib import Path
 import pyarrow as pa
 import pyarrow.parquet as pq
 import sys
-import numpy as np
 
-DAT_DIR = Path("cpp")
+DAT_DIR = Path(".")
 
 dfs = []
 for mydir in DAT_DIR.glob("*_data_dir"):

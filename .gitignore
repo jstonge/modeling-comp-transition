@@ -15,4 +15,4 @@ figs/pipeline/old1/
 cpp/tmp_data_dir/
 
 .vscode/settings.json
-cpp/*_data_dir/
+src/*_data_dir/
