@@ -1,54 +1,26 @@
-import glob
 import re
+import matplotlib.cm as cm
+import matplotlib.colors as colors
 import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
-
-file_list = sorted(glob.glob("test_*.csv"))
-
-alphas = []
-final_fractions = []
-
-for filename in file_list:
-    # Extract the numeric part from the filename (e.g. 0.008 from "test_0.008.csv")
-    match = re.search(r"test_([0-9\.]+)\.csv", filename)
-    if not match:
-        continue
-    alpha_val = float(match.group(1))
-    
-    df = pd.read_csv(filename, header=None)  
-
-    final_fraction = df.iloc[-1, -1]  # last row, last column
-    
-    alphas.append(alpha_val)
-    final_fractions.append(final_fraction)
-
-# 5) Plot
-plt.plot(alphas, final_fractions, marker='o', linestyle='--')
-plt.xlabel("β (benefices des programmeurs)")
-plt.grid()
-plt.ylabel("Cumulative People leaving because coding is too hard")
-plt.title("α (bénéfices non-programmeurs) fixé à 1.0; k=1.0,")
-plt.savefig("alpha_sweep.svg")
-plt.show()
+from pathlib import Path
 
 
-# -----------
-
-import glob
-import re
-import pandas as pd
-import numpy as np
+FIG_DIR = Path("figs")
+CPP_DIR = Path("cpp")
 
 # 1) Gather all files matching "test_*.csv"
-file_list = sorted(glob.glob("test_*.csv"))
+file_list = sorted(
+    CPP_DIR.glob("test_*.csv"), 
+    key=lambda x: int(x.stem.split('_')[1])
+)
 
 results = []  # will hold tuples of (alpha, frac_prog, cost_deaths)
-
 for fname in file_list:
     # break
     # 2) Extract alpha from filename: e.g. "test_0.01.csv" -> alpha=0.01
-    match = re.search(r"test_([0-9.]+)\.csv", fname)
+    match = re.search(r"test_([0-9.]+)", fname.stem)
     if not match:
         continue
     alpha_val = float(match.group(1))
@@ -107,26 +79,21 @@ ax[1].legend()
 
 plt.suptitle(r"$\alpha$ (non-progs beneftis) fixed at 10.0;k=3.0, x0=0.05")
 plt.tight_layout()
-# plt.savefig("alpha_sweep.svg")
+# plt.savefig(FIG_DIR/"alpha_sweep.svg")
 plt.show()
-
-
 
 # -----------
 
-import glob
-import re
-import pandas as pd
-import numpy as np
-import matplotlib.cm as cm
-import matplotlib.colors as colors
 
-# 1) Gather all files matching "test_*.csv"
-file_list = sorted(glob.glob("test_*.csv"))
+
+file_list = sorted(
+    CPP_DIR.glob("tmp_data_dir/test_*.csv"), 
+    key=lambda x: int(x.stem.split('_')[1])
+)
 
 alpha_vals = []
 for fname in file_list:
-    match = re.search(r"test_([0-9.]+)\.csv", fname)
+    match = re.search(r"test_([0-9.]+)", fname.stem)
     # if float(match.group(1)) == 4:
     #     continue
     if match:
@@ -145,52 +112,66 @@ fig, ax = plt.subplots(1, 1, figsize=(8, 4))
 for fname in file_list:
     # fname = file_list[30]
     # Extract alpha from filename, e.g. "test_0.01.csv" -> alpha=0.01
-    match = re.search(r"test_([0-9.]+)\.csv", fname)
+    match = re.search(r"test_([0-9.]+)", fname.stem)
     if not match:
         continue
     alpha_val = float(match.group(1))
-    
     
     color = cmap(norm(alpha_val))
 
     df = pd.read_csv(fname, names=["time", "d1", "d2", "y", "costDeathsCum", "avgProgs"])
 
-
-    # t_col = df.time.to_numpy()
-    # cost_cum = df.costDeathsCum.to_numpy()
-    # unique_times = np.unique(t_col)
-    
     last_row = df.iloc[-1,:]
 
     costDeathsCum_norms = last_row.costDeathsCum / last_row.time
 
     plt.plot(costDeathsCum_norms, last_row.avgProgs, 'o', color=color, label=f"alpha={alpha_val}")
     
-    # cost_vs_time = []
-    # for t_val in unique_times:
-    #     mask = (t_col == t_val)
-    #     cost_now = np.mean(cost_cum[mask])
-    #     cost_vs_time.append(cost_now)
-    
-    # # Reduced dot size using markersize, and plotting with a line ('-') connecting the points
-    # ax.plot(unique_times, cost_vs_time, 'o-', markersize=3, label=f"alpha={alpha_val}")
-
-# ax.set_xlabel("Time")
 ax.set_xlabel("costDeathsCum")
-# ax.set_ylabel("Cumulative Cost-Based Deaths")
 ax.set_ylabel("avgProgs")
-
-# Move legend outside the plot area:
-# ax.legend(loc='upper left', bbox_to_anchor=(1, 1))
 ax.grid(True)
-
-# plt.suptitle(r"$\alpha$ (non-progs benefits) fixed at 10.0; k=3.0, x0=0.05")
 plt.suptitle(r"")
 
 sm = cm.ScalarMappable(cmap=cmap, norm=norm)
 sm.set_array([])
 cbar = plt.colorbar(sm, ax=ax, label='alpha')
 
-
 plt.tight_layout(rect=[0, 0, 0.75, 1])  # Adjust layout to accommodate the external legend
 plt.show()
+
+
+
+# ----------- output to observable
+
+file_list = sorted(
+    CPP_DIR.glob("test_*.csv"), 
+    key=lambda x: int(x.stem.split('_')[1])
+)
+
+results = [] 
+for fname in file_list:
+    df = pd.read_csv(fname, names=["time", "d1", "d2", "y", "costDeathsCum", "avgProgs"])
+    match = re.search(r"test_([0-9.]+)", fname.stem)
+    if not match:
+        continue
+    
+    alpha_val = float(match.group(1))
+    # color = cmap(norm(alpha_val))
+    t_col = df.time.to_numpy()
+    cost_cum = df.costDeathsCum.to_numpy()
+    avg_progs = df.avgProgs.to_numpy()
+    unique_times = np.unique(t_col)
+
+    cost_vs_time = []
+    avg_progs_time = []
+    for t_val in unique_times:
+        mask = (t_col == t_val)
+        cost_now = np.mean(cost_cum[mask])
+        avg_progs_now = np.mean(avg_progs[mask])
+        cost_vs_time.append(cost_now)
+        avg_progs_time.append(avg_progs_now)
+    
+    results.append(pd.DataFrame({"time":unique_times, "avgProgs": avg_progs_time, "cost":cost_vs_time, "alpha": alpha_val}))
+
+all_dfs = pd.concat(results)    
+all_dfs.to_csv("src/cost_vs_time_k1.csv", index=False)

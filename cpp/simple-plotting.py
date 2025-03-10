@@ -15,7 +15,6 @@ y_col    = data[:, 3]
 cost_cum  = data[:, 4]  # costDeathsCum
 avg_progs  = data[:, 5]  # costDeathsCum
 
-
 unique_times = np.unique(t_col)
 
 

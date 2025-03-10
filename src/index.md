@@ -1,64 +1,294 @@
+---
+sql:
+    data: tradeoff.parquet
+---
+
 # Modeling Comp Transition
 
-We first provide an overview of hysteresis in ecology, then we explain our group-based master equation model.
+We show some results that we have so far. Recall the procedure is as follows: 
 
-## Hysteresis in ecology
+- We start with large research groups at equilibrium with 35 non-progs and 0 programmer. We are interested into transient dynamics towards an alternative stable state with programmers.  
+- Learning to code entails an individual cost. When it is too costly, people try and fail (and leave the system). The cost function is dependent on the number of programmers groups. We the form to be a sigmoid where we play with _k_ (the steepneess of the slope) and _x0_ (its midpoint). See lab notes below.
+- `cumulative death`: We keep track of how many people leave the system because as a result of a fail transition. 
+- `avgProgs`: We also keep track how long does it take to transition to the equilibrium state with programmers. Once they get there, we check the average number of programmers in the system. 
+- We want to demonstrate the potential following **tradeoff**:
+    - On the one hand, what if transitioning too fast lead to more or less people in the system. Groups might want to transition fast because it increases their benefits. But if they transition too fast, they do not leave the space for members to learn to code. More people will be left out in the transition, but since people keep flowing in groups might be willing to adopt that strategy. 
+    - Alternatively, groups could slow down the transitions, thereby leaving time for people to learn to code. In doing so, we might see smaller cumulative deaths for the same number of programmers.  
 
-In ecology, alternative stable states are important because they can lead to drastic changes in the ecosystem even with small perturbations, which cannot be undone easily. 
+To find this tradeoff, we start by lookging at `time to finish transition` on the xaxis, with `cumulative deaths` and final `average programmers` on the yaxis. We start with a small (=30) and large (=53) beta to explain the plots:
 
-The classical example is that of turbidity in shallow lakes, in response to excess level of nutrients (like phosphate). Something like
-
-```tex
-\dot{X} = \frac{a + X^2}{1+X^2} - rX
+```sql id=[...raw_data]
+WITH unique_avgProgs AS (
+    SELECT DISTINCT beta, avgProgs, k
+    FROM data
+)
+SELECT d.beta::INT as beta, d.time, d.avgProgs, d.costDeathsCum as cost, d.k::INT as k,
+    (SELECT COUNT(*) 
+     FROM unique_avgProgs u 
+     WHERE u.k = d.k AND u.beta = d.beta AND u.avgProgs <= d.avgProgs
+    )::FLOAT /
+    (SELECT COUNT(*) 
+     FROM unique_avgProgs u 
+     WHERE u.k = d.k AND u.beta = d.beta
+    ) AS avgProgs_percentile
+FROM data d;
 ```
 
-where _X_ is the ecosystem state (turbidity of the lake), while _r_ is the parameter condition (like nutrients). As you add more nutrients, nothing might happen for a while to the state of the lake. But as you hit a critical threshold, you bifurcate to a new fixed point of turbidity that is much higher than the previous one ('catastrophe' event). Unfortunately, as the story goes, to get get back to your favored equilibrium you need to remove much more nutrients from the lake than what has been allowed before. It might look like 
-
-![](./figs/hysteresis.png)
-
-Try explaining that to farmers than the previous allowed level of nutrients is too much now.
-
-This example has a a single parameter _r_. In the next example popularized by Strogatz, we have the outbreak of spruce budworms in forest, which the nondimensional version looks like
-
-```tex
-\dot{X} = rX(1 - \frac{X}{K}) - \frac{X^2}{1+X^2}
+```js
+let mydata = raw_data.filter(d => [3,6].includes(d.k) & [30,53].includes(d.beta))
+let mydata2 = raw_data.filter(d => [1,3,6,15].includes(d.k) & [30,40,42,44,46, 53].includes(d.beta))
+let mydata3 = raw_data.filter(d => [1,3,6,15].includes(d.k))
 ```
 
-Here, the removal of the spruce budworms _X_ is a nonlinear term, wheras the growth rate takes a logistic form with growth rate _r_ and a carrying capacity _K_. For specific value of _K_ and _r_, we might have something like
+```js
+let thresh = view(Inputs.range([0.8,1], {
+    value: 1.0, step:0.01, label: "precentile removed (this will impact both plots below)"
+}))
+```
+<div class="grid grid-cols-2">
+    <div>
+    ${simple1(mydata, {width: 600})}
+    ${simple2(mydata, {width: 600})}
+    </div>
+    <div>
+        <ul>
+        <small>
+            <li>Color is the coding benefit. Larger means it is more beneficial. Alpha, non-programmers benefits, is fixed at 10</li>
+            <li>We also show how those values change with <em>k</em>, the slope of the cost function:</li>
+            ${cost_function_plot()}
+            ${x0Input}
+            <li>In this case, a gentler slope (<em>k=3</em>) seems favorable, as we end up with as many programmers, but much fewer deaths.  </li>
+            <li>What counts as 'finishing' the transition? The transition is complete when the system reaches the final fraction of programmers. That is, after simulating for a long enough time (tmax=100 is enough, given big enough recruitment rate (=100) and graduate rate (=10), we grab the last value for which the difference in average programmers stops changing within a specified accuracy (eps_abs = 1e-6; eps_rel = 1e-8).
+            <li>We provide the option to play with that. For instance, what if we consider the transition finished when we reach 95% of the final fraction of programmers? In this case, we can see that the cumulative deaths for low beta (=30) is now lower than that of high beta (=53)</li> 
+        </small>
+        </ul>
+    </div>
+</div>
 
-![](./figs/budworms1.png)
-
-Then, with some algebra, Strogatz show that we have hysteresis in this 2d systems 
-
-![](./figs/budworms2.png)
-
-To see how the pair of parameters _r_ and _k_ impact the ecosystem, you now need a 3d plot (plot borrowed from Garfinkel et al. 2021):
-
-![](./figs/budworms3.png)
-
-The management story here is that if you want to get from outbreak to refugee only, you could either drastically reduce _r_ (good luck with that) or perhaps reduce a little bit _k_ and _r_ (get into the bistable region, black star), then reduce _X_ (by spraying insecticides; white star). With this strategy, the system could go back by itself in the low-X equilibrium state (red star).
-
-In both cases, we have a single state variable driven by one or more condition parameters. In the first case, the import of nutrients is nonlinear, with the removal being linear. In the second case, we end up with the removal being nonlinear (and not dependent on any parameter), while the reproduction rate is linear. 
-
-In ecology, there are two ways by which alternative stable states are thought to happen; either by a shift in parameters shift, or in state variables.
-
-![](./figs/beisner2003.jpg)
-
-The key differences are part of cultural differences in ecology:
-
-- `community perspective`: shift in state variables (pushing a ball over a hill; landscape is broadly constant), e.g.
-  - alternative interior states (predator removal or additions, Overharvesting a fishery)
-  - boundary states where one or more species is absent (interspecific competition is stronger than intraspecific competition, one population will outcompete the other, Dispersal and colonization)
-- `ecosystem perspective`: shift in parameters (changing the underlying landscape)
-
-
-As mentionned by Giulio, we should also note that all previous examples have fixed points that are solutions of a third order equation:
-
-```tex
-ax^3+bx^2+cx+d=0
+```js
+const x0Input = Inputs.range([0.05, 0.5], {label:"x0", step:0.01, value: 0.05})
+const x0 = Generators.input(x0Input);
 ```
 
-And the thing, as he say, is that you cannot get hysteresis with an equation of a lower order.
+
+## More Betas
+
+
+```js
+let do_log_simple = view(Inputs.toggle({label: 'log yaxis'}))
+```
+
+```js
+simple1(mydata2, {width: 1200})
+```
+
+```js
+simple2(mydata2, {width: 1200})
+```
+
+## State space(ish)
+
+Ok, now we are doing something different. Lets try to put on the x-axis cumulative death and on the y-axis the average number of programmers. I find it requires a bit more love to like it. But the idea is that because we are looking at cumulative deaths, we are looking at time but the ticks show how many people have left the system. If you try beta=55, you'll see, as before, that the system transitionned fast into state with many programmers as it goes straight up and it doesn't get far on the right.
+
+We also introduce a second plot (right), where we only look at the equilibrium state (think about it as a roadmap for the plot on the left). In this plot, we can see how moderate value of beta lead to most people leaving the system; programming is valuable enough that people try it, but not enough that the cost is minimized (is that right? Im asking to myself). If we look back to the previous plot, we can see that the early stopping of the k=3.
+
+```sql id=[...foo]
+SELECT 
+    d.beta::INT as beta, 
+    d.k::INT as k, 
+    d.*, 
+    d.costDeathsCum / NULLIF(d.time, 0) AS costDeathsCum_norm
+FROM data d
+WHERE d.time = (
+    SELECT MAX(time) 
+    FROM data d2 
+    WHERE d2.beta = d.beta AND d2.k = d.k
+) AND d.beta > 10
+ORDER BY d.beta;
+```
+
+```js
+let sel_beta = view(Inputs.range([10,60], {label: "Choose beta", step: 1, value: 45}))
+const do_norm = view(Inputs.toggle({label: "normalize by time"}))
+const do_log = view(Inputs.toggle({label: "log"}))
+```
+
+<div class="grid grid-cols-2">
+    <div>
+    ${beta_plot(mydata3)}
+    </div>
+    <div>
+    ${phase_space_plot()}
+    </div>
+</div>
+
+```js
+const beta_plot = function(data) {
+    const make_title = (d) => `time: ${d.time}\nbeta: ${d.beta}\nalpha: 10.0\nAvg #progs: ${d.avgProgs}\nPercentile: ${d.avgProgs_percentile.toFixed(3)}`
+
+    return Plot.plot({
+        grid: true,
+        height: 400,
+        width: 600,
+        color: {legend:true, type: "ordinal"},
+        x: {type: "log", label: "cumulative death"},
+        y: {label: "average # programmers"},
+        caption: `The goal is somewhat to get as fast as possible up, without going too much on the right.`,
+        marks: [
+        [1,3,6,15].map(k=>
+             Plot.line(data, { 
+                filter: d => d.k == k & d.beta == sel_beta,
+                x: "cost", y: 'avgProgs', stroke: 'k'}
+            )
+        ),
+        [1,3,6,15].map(k=>
+            Plot.dot(data, {
+                filter: (d,i) => d.k == k & d.beta == sel_beta & i % 1 == 0 ? d : null, 
+                x: "cost", y: 'avgProgs', 
+                fill: "k",
+                fillOpacity: d => d.avgProgs_percentile <= thresh ? 1.0 : 0.,
+                // tip: true,
+                title: d => make_title(d)
+            })
+        )
+        ]
+})
+    
+    
+    return 
+    
+    }
+```
+
+```js
+function phase_space_plot() {
+    return Plot.plot({
+    grid: true,
+    width: 600,
+    height: 400,
+    x: {
+        type: do_log ? "log" : "linear", 
+        label: do_norm ? "Last cumulative death rate" : "Last  cumulative death"
+        },
+    color: {legend:true, type: "ordinal"},
+    marks: [
+        Plot.dot(foo, {
+            x: do_norm ? "costDeathsCum_norm" : 'costDeathsCum', 
+            y: 'avgProgs', 
+            fill: "k", tip: true, title: d=>`β: ${d.beta}`
+        }),
+        Plot.line(foo, {
+            x: do_norm ? "costDeathsCum_norm" : 'costDeathsCum', 
+            y: 'avgProgs', stroke: "k"
+        }),
+        Plot.dot(foo, {
+            filter: d=>d.beta == sel_beta,
+            x: do_norm ? "costDeathsCum_norm" : 'costDeathsCum', 
+            y: 'avgProgs', 
+            r: 6,
+            fill: "yellow", stroke: "black",
+            symbol: 'star'
+        }),
+    ]
+    }
+)
+}
+```
+
+## Beyond simplicity: the hydra plot
+
+TBD if this is a good plot. It is pretty wild. As before, as you go farther right, more people left the system (depending on how we define equilibrium state). As you go up, you have more programmers. 
+
+```js
+let all = view(Inputs.toggle({label: 'show all betas'}))
+```
+
+<div class="grid grid-cols-2">
+    <div>
+    ${tradeoff_plot(all ? mydata3 : mydata2.filter(d=>[3,6].includes(d.k)))}
+    </div>
+    <div>
+    <em>notes:</em>
+    <ul>
+    <li>The black squares represent timestep 0.03, 1.5, and 15 (pretty random). By looking at cumulative death, we introduce a distortion. If we think back at our previous plots, we saw that large beta means that early stopping, with many programmers. </li>
+    </ul>
+    </div>
+</div>
+
+```js
+const tradeoff_plot = function(data) {
+
+    const make_title = (d) => `time: ${d.time}\nbeta: ${d.beta}\nalpha: 10.0\nAvg #progs: ${d.avgProgs}\nPercentile: ${d.avgProgs_percentile.toFixed(3)}`
+
+    return Plot.plot({
+        grid: true,
+        color: {
+            legend:true, 
+            type: "linear"
+            },
+        x: {type: "log", label: "cumutative death"},
+        y: {label: "average # programmers"},
+        height: 600,
+        width: 600,
+        marks: [
+            Plot.line(data, {
+                x: 'cost', y: 'avgProgs', stroke: 'beta', strokeOpacity: 0.3, fy: 'k'
+            }),
+            Plot.dot(data, {
+                x: 'cost', y: 'avgProgs', 
+                fill: d => d.avgProgs_percentile <= thresh ? d.beta : null,
+                fillOpacity: 0.8,
+                fy: 'k',
+                // tip: true,
+                title: d => make_title(d)
+            }),
+            Plot.dot(data, {
+                filter: d => [0.03, 1.5, 5, 15, 25].includes(d.time),
+                x: 'cost', y: 'avgProgs', 
+                fill: "black", r: 2.5, 
+                symbol: "square",
+                tip: true,
+                fy: 'k',
+                title: d => make_title(d)
+            })
+            ]
+    })
+    
+    }
+```
+
+We call this the hydra plot. The heads are given by varying beta, while the tongues are what is left when we cutoff the dynamics based on some percentage of the final state (here defined as ${thresh*100}% of the average number of programmers at equilibrium). For instance, we smaller _k_ (less steep cost function) entails a larger cutoff effect. It make sense, as steep cost function entails a all or nothing situation, so the transition is happening faster. In the next plot, we offer a more focused version of the first plot, where we zoom in on a specific values of beta for different _k_ on the transition. We can see, for instance, that _k=1_ ends up being 
+
+The plot on the RHS is a kind of a map to know where we are. Instead of looking at time evolution, we plot total deaths and average number of programmers at equilibrium. 
+
+
+
+
+
+
+### GIFs
+
+Below we show a couple of movie of what different time dynamics feel like for particular set of parameters. 
+
+<div class="grid grid-cols-3">
+    <div>
+    <img src="./movie/a10_b60_k3_x0.05.gif" alt="gif results">
+    <small><em>Large beta, moderate k, small x0</em></small><br>
+    <small>μ   νn   νp   α    β   k   x0   K 10 11 12 TEMP LOG tmax</small><br>
+    <small>100 10 10 10 60 3 0.05 40 40 40 4 1 0 100</small>
+    </div>
+    <div>
+    </div>
+    <div>
+    </div>
+</div>
+
+---
+
+
+## Hysteresis in the emergence of new skills
+
+Intuitively (or naively), our small perturbations here would be that we increase the benefits to code which cannot be undone easily. Assume that the context is that humanities start valuing way too much 'computational approach' at the expense of domain expertise. Say that in philosophy, a hiring committee could  favor of someone who know a fair bit of programming over someone who has deep knowledge of Plato, but know nothing of programming. In this story, _X_ is number of programmers in the system, while _b_ is the parameter condition (like benefits to learn coding). As you add more benefits, nothing might happen for a while to the state of the system. But as you hit a critical threshold, you bifurcate to a new fixed point of programmers that is much higher than the previous one ('catastrophe' event). Unfortunately, as the story goes, to get get back to your favored equilibrium you need to 'remove' much more benefit (say by increasing the benefit of non-programmers) from the system than what has been allowed before.
 
 ## GMEs hysteresis: base model
 
@@ -159,7 +389,7 @@ const β = view(Inputs.range([0.001, 0.11], {label: "β (prog benefit)", step:0.
         x: {label:"p/n"}, y: {label:"τ(n,p)"},
         marks: [
             Plot.line( d3.range(0, 1, 0.01), { 
-                x: x => x, y: x => Math.exp(-α + β*(1-c(x, k, 0.25))), stroke:"red" 
+                x: x => x, y: x => -α + β*(1-c(x, k, 0.25)), stroke:"red" 
                 }
             )
         ]
@@ -368,6 +598,86 @@ with some more we didn't put.
 ## More ideas
 
 - For us, one idea would be that the landscape (institutions) are broadly constant, while one population (of programmers) could end up either displacing the other or could live in a bistable regime. This is another occasion to model timescale separation!
+
+
+
+
+
+<!-- APPENDIX -->
+
+```js
+function simple1(data, {width} = {}) {
+    return Plot.plot({
+        height: 300,
+        width,
+        color: {legend: true, type: 'linear'},
+        grid: true,
+        y: {type: do_log_simple ? 'log' : 'linear', label : 'cumulative deaths'}, 
+        x: {label: null},
+        marks: [
+            Plot.frame(),
+            Plot.line(data, {
+                x: 'time',  y: 'cost',  stroke: "beta", strokeOpacity: 0.3, fx: 'k', tip:true
+            }),
+            Plot.dot(data, {
+                x: 'time', y: 'cost', 
+                fill: d => d.avgProgs_percentile <= thresh ? d.beta : null, r: 2, fx: 'k'
+            }
+            )
+        ]
+    })
+}
+
+function simple2(data, {width} = {}) {
+    return Plot.plot({
+        height: 300,
+        width,
+        color: {type: 'linear'},
+        grid: true,
+        y: {label : 'average Progs'}, 
+        x: {label: 'time to finish transition'},
+        marks: [
+            Plot.frame(),
+            Plot.line(data, {
+                x: 'time',  y: 'avgProgs',  stroke: "beta", strokeOpacity: 0.3, fx: 'k'
+            }),
+            Plot.dot(data, {
+                x: 'time', y: 'avgProgs', 
+                fill: d => d.avgProgs_percentile <= thresh ? d.beta : null, r: 2, fx: 'k'
+                }
+            )
+        ]
+    })
+}
+
+function cost_function_plot() {
+    return Plot.plot({
+    nice: true,
+    grid: true,
+    width: 300, 
+    height: 200,
+    color: {domain: ["k=3","k=6","k=15"], range: ["green", "red", "orange"], legend:true},
+    x: {label:"#progs/# non-progs"},
+    y: {label:"Cost learning to code", domain: [0,1]},
+    marks: [
+        Plot.frame(),
+        Plot.line(
+            d3.range(0, 1, 0.01),
+            { x: x => x, y: x => c(x, 15, x0), stroke: "orange" }
+        ),
+        Plot.line(
+            d3.range(0, 1, 0.01),
+            { x: x => x, y: x => c(x, 6, x0), stroke: "red" }
+        ),
+        Plot.line(
+            d3.range(0, 1, 0.01),
+            { x: x => x, y: x => c(x, 3, x0), stroke: "green" }
+        )
+    ]
+})
+}
+```
+
 
 <style>
 

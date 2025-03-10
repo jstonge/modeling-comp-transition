@@ -56,7 +56,8 @@
      double t = 0.0;
      double dt = 0.1;
     //  double t_step = 0.001;
-     double t_step = 0.5;
+     double t_step = 0.01;
+    //  double t_step = 0.5;
      const double eps_abs = 1e-6;
      const double eps_rel = 1e-8;
  

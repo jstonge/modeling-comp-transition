@@ -6,3 +6,4 @@ numba
 duckdb
 fastparquet
 tqdm
+pyarrow
