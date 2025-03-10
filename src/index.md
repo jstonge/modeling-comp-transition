@@ -61,7 +61,7 @@ FROM data d;
 ```
 
 ```js
-let mydata = raw_data.filter(d => [3,6].includes(d.k) & [30,52].includes(d.beta))
+let mydata = raw_data.filter(d => [3,6].includes(d.k) & [b1,b2].includes(d.beta))
 let mydata2 = raw_data.filter(d => [3].includes(d.k) & [29,36,37,38,39,40,41,42,43,44,46,53].includes(d.beta))
 let mydata3 = raw_data.filter(d => [1,3,6,15].includes(d.k))
 ```
@@ -154,6 +154,13 @@ function simple2(data, {width, facet} = {}) {
     })
 }
 ```
+You can play the same game with othere beta. 
+
+```js
+let b1 = view(Inputs.range([20,60], {label: "Low beta", step:1, value:30}))
+let b2 = view(Inputs.range([20,60], {label: "High beta", step:1, value:53}))
+```
+We find that by decreasing high beta (say beta=42), we see a decrease in average number of programmers for _k=6_ relative to that of _k=3_... cool stuff.
 
 ## More Betas
 
