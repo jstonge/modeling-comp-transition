@@ -4,15 +4,15 @@ import pyarrow as pa
 import pyarrow.parquet as pq
 import sys
 
-DAT_DIR = Path("src/")
+# DAT_DIR = Path("src/")
 
-final_res = []
-for csvfile in DAT_DIR.joinpath("hysteresis_1").glob("*"):
-    df = pd.read_csv(csvfile, names=["time", "d1", "d2", "y", "costDeathsCum", "avgProgs"])
-    time, _, _, _, costDeathsCum, avgProgs = df.iloc[-1, :]
-    _, beta, k, x0 = csvfile.stem.split('_')
+# final_res = []
+# for csvfile in DAT_DIR.joinpath("hysteresis_1").glob("*"):
+#     df = pd.read_csv(csvfile, names=["time", "d1", "d2", "y", "costDeathsCum", "avgProgs"])
+#     time, _, _, _, costDeathsCum, avgProgs = df.iloc[-1, :]
+#     _, beta, k, x0 = csvfile.stem.split('_')
     
-    final_res.append((time, costDeathsCum, avgProgs, float(beta),float(k),float(x0)))        
+#     final_res.append((time, costDeathsCum, avgProgs, float(beta),float(k),float(x0)))        
 
 # df = pd.DataFrame(final_res, columns=["time", "costDeathsCum", "avgProgs", "beta", "k", "x0"]).sort_values("k")
 

@@ -107,22 +107,18 @@ Ok, now we are doing something different. Lets try to put on the x-axis cumulati
 We also introduce a second plot (right), where we only look at the equilibrium state (think about it as a roadmap for the plot on the left). In this plot, we can see how moderate value of beta lead to most people leaving the system; programming is valuable enough that people try it, but not enough that the cost is minimized (is that right? Im asking to myself). If we look back to the previous plot, we can see that the early stopping of the k=3.
 
 ```sql id=[...foo]
-WITH ranked_data AS (
-    SELECT 
-        d.beta::INT as beta, 
-        d.k::INT as k,  
-        d.avgProgs,
-        d.costDeathsCum,
-        d.time,
-        d.costDeathsCum / NULLIF(d.time, 0) AS costDeathsCum_norm,
-        ROW_NUMBER() OVER (PARTITION BY d.beta, d.k ORDER BY d.time DESC, d.avgProgs) AS rn
-    FROM tradeoffData d
-    WHERE d.beta > 10 AND d.k = 3 AND d.beta = 60
-)
-SELECT beta, k, avgProgs, costDeathsCum, time, costDeathsCum_norm
-FROM ranked_data
-WHERE rn = 1
-ORDER BY beta;
+SELECT 
+    d.beta::INT as beta, 
+    d.k::INT as k, 
+    d.*, 
+    d.costDeathsCum / NULLIF(d.time, 0) AS costDeathsCum_norm
+FROM data d
+WHERE d.time = (
+    SELECT MAX(time) 
+    FROM data d2 
+    WHERE d2.beta = d.beta AND d2.k = d.k
+) AND d.beta > 10
+ORDER BY d.beta;
 ```
 
 ```js
