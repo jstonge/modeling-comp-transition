@@ -158,39 +158,45 @@ let do_log_simple = view(Inputs.toggle({label: 'log yaxis'}))
 ```
 
 <div class="grid grid-cols-2">
+    <div>
+    ${simple1(mydata2, {width: 600, facet: true})}
+    ${simple2(mydata2, {width: 600, facet: true})}
+    </div>
 <div>
-${simple1(mydata2, {width: 600, facet: true})}
-${simple2(mydata2, {width: 600, facet: true})}
-</div>
-<div>
-<ul>
-<br><br>
-${
-Plot.plot({
-    height: 300,
-    width: 600,
-    y: {grid: true},
-    marks: [
-            Plot.dot(foo.filter(d => d.k==3), {x: 'beta', y: 'costDeathsCum', fill: "beta", tip: true }),
-            Plot.frame()
-        ]
-    })
-}
-<br>
-${
+    <br><br>
+    ${
     Plot.plot({
-    height: 300,
-    width: 600,
-    y: {grid: true},
-    marks: [
+        height: 300,
+        width: 600,
+        y: {grid: true, type: "log"},
+        marks: [
+                Plot.dot(foo.filter(d => d.k==3), {x: 'beta', y: 'costDeathsCum', fill: "beta", tip: true }),
+                Plot.dot(foo.filter(d => d.k==6), {x: 'beta', y: 'costDeathsCum', fill: "beta", fillOpacity: 0.3 }),
+                Plot.ruleX([22, 36, 44], {strokeDasharray: 3}),
+                Plot.frame()
+            ]
+        })
+    }
+    ${
+        Plot.plot({
+        height: 300,
+        width: 600,
+        y: {grid: true},
+        caption: "k=3; x0=0.05. The dots with low opacity is actually k=6.",
+        marks: [
+            Plot.text([`People try,\nbut no transition`, `Successful\ntransition`], {x:[29, 52], y:[20,10], fontSize:18}),
             Plot.dot(foo.filter(d => d.k==3), {x: 'beta', y: 'avgProgs', fill: "beta" }),
+            Plot.dot(foo.filter(d => d.k==6), {x: 'beta', y: 'avgProgs', fill: "beta", fillOpacity: 0.3 }),
+            Plot.ruleX([22, 36, 44], {strokeDasharray: 3}),
             Plot.frame()
-        ]
-    })
-}
-</ul>
+            ]
+        })
+    }
+    </div>
 </div>
-</div>
+
+So basically, we see that 
+
 
 ## State space(ish)
 
