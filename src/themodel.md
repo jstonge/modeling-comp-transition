@@ -4,6 +4,31 @@
 
 We are interested in modeling the varying cost-benefit ratio of having programmers in research groups. Let ${tex`G_{n,p}`} be the fraction of groups with _n_ non-programmers and _p_ programmers. The idea is that we want to know under which conditions we can have bistable regime of groups with majority of programmers and non-programmers, in an shift environement (say, the humanities becoming more computational). We have the following model:
 
+
+```tex
+\begin{align*}
+    \frac{d}{dt}G_{n,p} &=  \mu G_{n-1,p} \cdot (n+p)(1-\frac{n+p}{k}) \\
+                        &- mu G_{n,p} \cdot (n+p+1)(1-\frac{n+p+1}{k}) \\
+                        &+ nu_n(n+1)G_{n+1,p} \\
+                        &- n\nu_n G_{n,p} \\
+                        &+ nu_p(p+1)G_{n,p+1} \\
+                        &- p\nu_p G_{n,p} \\
+                        &+ \frac{1}{1 + e^{-k(B(n+1,p-1)-C(n+1,p-1))}} \\
+                        &- \frac{1}{1 + e^{-k(B(n,p)-C(n,p))}} \\
+\end{align*}
+ 
+\begin{align*}
+    B(n,p) = \alpha \frac{1}{1 + e^{-k (\frac{p}{n} - x_0) }}
+
+    C(n,p) = \frac{1}{1 + e^{k (\frac{p}{n} - x_0) }}
+\end{align*}
+```
+
+---
+
+#### old
+
+
 ```tex
 \begin{align*}
     \frac{d}{dt}G_{n,p} &= \textcolor{red}{\mu G_{n-1,p} \cdot (n+p)(1-\frac{n+p}{k})}  \\
@@ -33,7 +58,7 @@ The color coding maps to the picture on the right. The output flow (probability 
 | function | form | description |
 | ----   | -----      |        ----         |
 | ${tex`\tau_g(n,p)`} | ${tex`-\alpha + \beta(1-c(n,p))`} |            |
-| ${tex`c(n,p)`} | TBD |                    |
+| ${tex`c(n,p)`} | ${tex`\frac{1}{1 + e^{k*(p/n - x_0)}}`} |                    |
 
 We explore our different functions in the following subsections
 

@@ -52,7 +52,7 @@
      // Integrator parameters
      double t = 0.0;
      double dt = 0.1;
-     double t_step = 0.01;
+     double t_step = 0.001;
     //  double t_step = 0.01;
     //  double t_step = 0.5;
      const double eps_abs = 1e-6;
@@ -75,7 +75,7 @@
          y[max1 - 1][0] = 1.0; // large group, all non-programmers
          last_avg = 0.0;
      } else if (IC == 4) {
-        y[35][0] = 1.0; // some ratio
+        y[0][19] = 1.0; // some ratio
         last_avg = 0.0;
     } else {
          cerr << "Invalid IC value.\n";
@@ -96,11 +96,6 @@
 
      double costDeathsCum = 0.0;  // cumulative cost-based deaths
      double t_prev = 0.0;         // track previous time for dt
-
-       // cout << t << ", mu:" << mu << ", nu_n: " << nu_n << ",nu_p: " << nu_p << ", ktau: "
-        // << ktau << ", a: " << a << ", bl: " << bl << ", x0c: " << x0c << ", K: "
-        // << K << ", IC:" << IC << ", AVG PROGS:"  << avg_progs << ", CUM DEATHS: "  << y[max1-1][max2-1]  <<
-        // ", TEMPORAL: " << TEMPORAL  << "\n";
 
     // Main loop
     for (double t_target = t + t_step; t < t_max; t_target += t_step) {

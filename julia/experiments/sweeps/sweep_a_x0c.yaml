@@ -1,0 +1,22 @@
+model_version: v1
+output_dir: sweep_a_x0c_v1
+sweep:
+  a:
+    start: 1.0
+    stop: 15.0
+    step: 1.0
+  x0c:
+    start: 0.1
+    stop: 0.5
+    step: 0.05
+fixed_parameters:
+  α: 0.9
+  νn: 0.2
+  νp: 0.2
+  K: 25
+  kc: 30.0
+  ktau: 10.0
+  bl: 0.1
+  r: 5.0
+tspan: [0.0, 200.0]
+grid_size: 25

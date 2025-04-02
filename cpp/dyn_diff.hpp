@@ -103,27 +103,27 @@ int dydt(double t, const double y[], double f[], void * param) {
                                             * d1
                                             * cost(d1, d2, p.k, p.x0)
                                             * yref[d1][d2];
-                // births
+                // birth output
                 if(d1 < p.max1 - 1) {
                     fref[d1][d2] -= sigma(d1, d2, p.K, p.mu) * yref[d1][d2];
-                }
+                } // birth input
                 if(d1 > 0) {
                     fref[d1][d2] += sigma(d1 - 1, d2, p.K, p.mu) * yref[d1 - 1][d2];
                 }
 
-                // non-prog deaths
+                // non-prog deaths output
                 if(d1 < p.max1 - 1) {
                     fref[d1][d2] += p.nu_n * (d1 + 1) * yref[d1 + 1][d2];
                 }
                 fref[d1][d2] -= p.nu_n * d1 * yref[d1][d2];
 
-                // prog deaths
+                // prog deaths output
                 if(d2 < p.max2 - 1) {
                     fref[d1][d2] += p.nu_p * (d2 + 1) * yref[d1][d2 + 1];
                 }
                 fref[d1][d2] -= p.nu_p * d2 * yref[d1][d2];
 
-                // non-prog -> prog transitions
+                // non-prog -> prog transitions output
                 if(d2 > 0 && d1 < p.max1 - 1) {
                     fref[d1][d2] += tau(p.alpha, p.beta, d1 + 1, d2 - 1, p.k, p.x0)
                                     * (d1 + 1)
@@ -135,7 +135,7 @@ int dydt(double t, const double y[], double f[], void * param) {
                                 * (1.0 - cost(d1, d2, p.k, p.x0))
                                 * yref[d1][d2];
                 
-                // cost-based deaths
+                // cost-based deaths output
                 if(d1 < p.max1 - 1) {
                     fref[d1][d2] += tau(p.alpha, p.beta, d1 + 1, d2, p.k, p.x0)
                                     * (d1 + 1)

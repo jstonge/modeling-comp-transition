@@ -31,7 +31,6 @@ struct Sparam {
 }; // parameter structure
 
 double cost(double x, double bl, double kc, double x0c, double r) {
-
     double value = 0.0;    
     value = (1 - r*bl)*(1. / (1. + exp(kc * (x - x0c)))) + bl;
     
@@ -40,17 +39,26 @@ double cost(double x, double bl, double kc, double x0c, double r) {
 }
 
 double B(double x, double bl, double a, double r) {
-    return (1. - r*bl)*exp(-a*x) + bl;   
+    double value = 0;
+    value = (1. - r*bl)*exp(-a*x) + bl;
+    if(value>0) return value;
+    else return 0.0;
 }
 
 double PI(double x, double a, double bl, double r) {
-    return (1. - r*bl)*exp(-a*x) + bl;
+    double value = 0.0;
+    value = (1. - r*bl)*exp(-a*x) + bl;
+    if(value>0) return value;
+    else return 0.0;
 }
 
 double tau(double x, double ktau, double a, double bl, double kc, double x0c, double r) {
     double value = 0.0;
-    value = 1.0 / (1.0 + exp(-ktau * (B(x, bl, a, r) - cost(x, bl, kc, x0c, r) + PI(x, a, bl, r))));
-    if(value<1.0 && value>0.0) return value;
+    double tau_rescaling = 20.0;
+
+    value = tau_rescaling*(1.0 / (1.0 + exp(-ktau * (B(x, bl, a, r) - cost(x, bl, kc, x0c, r) + PI(x, a, bl, r)))));
+
+    if(value>0.0) return value;
     else return 0.0;
 }
 
@@ -76,7 +84,8 @@ int dydt(double t, const double y[], double f[], void * param) {
     CSTmatref_type yref(y, boost::extents[p.max1][p.max2]);
     matref_type    fref(f, boost::extents[p.max1][p.max2]);
 
-    // hidden parameter
+    
+    // hidden parameters
     double r = 5.0;
 
     // Process all dynamics
@@ -85,72 +94,69 @@ int dydt(double t, const double y[], double f[], void * param) {
       for(int d2=0; d2<p.max2; ++d2) { //loop over number of programmers
 
             fref[d1][d2] = 0;
-            const double gsize = d1 + d2;
+            // const double gsize = d1 + d2;
 
-            if(d1+d2<=p.K) {
+            if(d1+d2 <= p.K) {
 
-                
-                // birth output
-                if(d1 < p.max1 - 1) {
+                // birth output ( n,p -> n+1,p)
+                if(d1 < p.max1-1.0) { 
                     fref[d1][d2] -= sigma(d1, d2, p.K, p.mu) * yref[d1][d2];
-                } // birth input
-                if(d1 > 0) {
-                    fref[d1][d2] += sigma(d1 - 1, d2, p.K, p.mu) * yref[d1 - 1][d2];
+                } // birth input ( n-1,p -> n,p)
+                if(d1 > 0.0) {
+                    fref[d1][d2] += sigma(d1 - 1.0, d2, p.K, p.mu) * yref[d1 - 1.0][d2];
                 }
                 
-                // non-prog deaths output
-                if(d1 < p.max1 - 1) {
-                    fref[d1][d2] += p.nu_n * (d1 + 1) * yref[d1 + 1][d2];
-                }
+                // non-prog deaths output ( n, p -> n-1, p)
+                if(d1 < p.max1 - 1.0) {
+                    fref[d1][d2] += p.nu_n * (d1 + 1.0) * yref[d1 + 1.0][d2];
+                } // non-prog deaths input ( n, p -> n+1, p)
                 fref[d1][d2] -= p.nu_n * d1 * yref[d1][d2];
 
-                // prog deaths output
-                if(d2 < p.max2 - 1) {
-                    fref[d1][d2] += p.nu_p * (d2 + 1) * yref[d1][d2 + 1];
-                }
+                // prog deaths output ( n, p -> n, p-1 )
+                if(d2 < p.max2 - 1.0) {
+                    fref[d1][d2] += p.nu_p * (d2 + 1.0) * yref[d1][d2 + 1.0];
+                } // prog deaths input ( n, p -> n, p+1 )
                 fref[d1][d2] -= p.nu_p * d2 * yref[d1][d2];
 
                 // non-prog -> prog transitions output
-                if (gsize > 0.0) {
+                if ((d1 + d2) > 0.0) {
 
-                    R_costDeath += tau(d2/gsize, p.ktau, p.a, p.bl, p.kc, p.x0c, r)
+                    R_costDeath += tau(d2/(d1 + d2), p.ktau, p.a, p.bl, p.kc, p.x0c, r)
                                         * d1
                                         * cost(d2/(d1+d2), p.bl, p.kc, p.x0c, r)
                                         * yref[d1][d2];
 
-                    if (d2 < p.max2-1) {
+                    if (d2 < p.max2-1.0) {
                         // Predation input
-                        fref[d1][d2] -= tau(d2/gsize, p.ktau, p.a, p.bl, p.kc, p.x0c, r)
-                            * (1.0 - cost(d2/gsize, p.bl, p.kc, p.x0c, r))
+                        fref[d1][d2] -= tau(d2/(d1 + d2), p.ktau, p.a, p.bl, p.kc, p.x0c, r)
+                            * (1.0 - cost(d2/(d1 + d2), p.bl, p.kc, p.x0c, r))
                             * d1
                             * yref[d1][d2];
                     }
                     
                                             
-                    if(d1 < p.max1-1 && d2 > 0 && d2 < p.max2-1) {
+                    if(d1 < p.max1-1.0 && d2 > 0.0 && d2 < p.max2-1.0) {
                         // Predation output
-                        fref[d1][d2] += tau((d2-1.0)/gsize, p.ktau, p.a, p.bl, p.kc, p.x0c, r)
+                        fref[d1][d2] += tau((d2-1.0)/(d1 + d2), p.ktau, p.a, p.bl, p.kc, p.x0c, r)
                                         * (d1 + 1.0)
-                                        * (1.0 - cost((d2-1.0)/gsize, p.bl, p.kc, p.x0c, r))
+                                        * (1.0 - cost((d2-1.0)/(d1 + d2), p.bl, p.kc, p.x0c, r))
                                         * yref[d1 + 1][d2 - 1];
                     }
                     
                     
-                    fref[d1][d2] -= tau(d2/gsize, p.ktau, p.a, p.bl, p.kc, p.x0c, r)
+                    fref[d1][d2] -= tau(d2/(d1 + d2), p.ktau, p.a, p.bl, p.kc, p.x0c, r)
                                     * d1
-                                    * cost(d2/gsize, p.bl, p.kc, p.x0c, r)
+                                    * cost(d2/(d1 + d2), p.bl, p.kc, p.x0c, r)
                                     * yref[d1][d2]; 
-                }
+                                }
 
-                // Predation output
-                if(d1 < p.max1 - 1) {
-                    fref[d1][d2] += tau((d2)/(gsize+1.0), p.ktau, p.a, p.bl, p.kc, p.x0c, r)
-                                    * (d1 + 1.0)
-                                    * cost((d2)/(gsize+1.0), p.bl, p.kc, p.x0c, r)
-                                    * yref[d1 + 1][d2];
-                }
-                
-                
+                    // Predation output
+                    if(d1 < p.max1 - 1) {
+                        fref[d1][d2] += tau(d2/(d1 + d2 + 1.0), p.ktau, p.a, p.bl, p.kc, p.x0c, r)
+                                        * (d1 + 1.0)
+                                        * cost(d2/(d1 + d2 + 1.0), p.bl, p.kc, p.x0c, r)
+                                        * yref[d1 + 1][d2];
+                    }
             }
             if (d1==p.max1-1.0 && d2==p.max2-1.0) fref[d1][d2] = R_costDeath;
       }

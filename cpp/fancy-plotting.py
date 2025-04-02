@@ -9,21 +9,22 @@ from pathlib import Path
 
 FIG_DIR = Path("figs")
 CPP_DIR = Path("cpp")
+TEST_DIR = Path("test_dir")
 
 # 1) Gather all files matching "test_*.csv"
 file_list = sorted(
-    CPP_DIR.glob("test_*.csv"), 
+    TEST_DIR.glob("test_*.csv"), 
     key=lambda x: int(x.stem.split('_')[1])
 )
 
 results = []  # will hold tuples of (alpha, frac_prog, cost_deaths)
-for fname in file_list:
+for fname in file_list[:15]:
     # break
     # 2) Extract alpha from filename: e.g. "test_0.01.csv" -> alpha=0.01
-    match = re.search(r"test_([0-9.]+)", fname.stem)
+    match = re.search(r"test_([0-9.]+)_([0-9.]+)", fname.stem)
     if not match:
         continue
-    alpha_val = float(match.group(1))
+    alpha_val = float(match.group(2))
 
     # 3) Read the CSV
     #    We'll assume columns are: time, d1, d2, y, costDeathsCum
@@ -87,7 +88,7 @@ plt.show()
 
 
 file_list = sorted(
-    CPP_DIR.glob("tmp_data_dir/test_*.csv"), 
+    TEST_DIR.glob("test_*.csv"), 
     key=lambda x: int(x.stem.split('_')[1])
 )
 

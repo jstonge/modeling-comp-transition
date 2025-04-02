@@ -136,22 +136,55 @@ Plot.plot({
 })
 ```
 
-Ok then, what if we look at a change in _k_ (steepness of cost function)
+Ok then, what if we look at a change in _k_ (steepness of cost function) or _x0_ (midpoint):
 
 ```sql id=[...hystData]
 SELECT * FROM data
 ```
 
+
 ```js
 Plot.plot({
   y: {grid: true},
-  caption: "x0=0.05; beta=40",
+  color: {legend: true},
+  caption: "x0=0.05 higlighted in red; beta=40",
   marks: [
-        Plot.dot(hystData, {
-            x: 'k', y: 'avgProgs'
+        Plot.dot(hystData, {x: 'k', y: 'avgProgs', stroke: 'x0'}),
+        Plot.line(hystData, {x: 'k', y: 'avgProgs', stroke: 'x0'}),
+        Plot.dot(hystData.filter(d=>d.x0==0.05), 
+            {x: 'k', y: 'avgProgs', fill: 'red'}
+        ),
+        Plot.line(hystData.filter(d=>d.x0==0.05), {
+            x: 'k', y: 'avgProgs', stroke: 'red'
         }),
         Plot.ruleY([0])
     ]
 })
 ```
 
+```js
+Plot.plot({
+  y: {grid: true},
+  color: {legend: true},
+  x: {reverse:true},
+  caption: "k=3; beta=40; we reverse the xaxis here because we go from hard to easier (x0=0.5 makes it harder to have programmers), with i.c. without programmers. ",
+  marks: [
+        Plot.dot(hystData.filter(d=>d.k==3), {x: 'x0', y: 'avgProgs'}),
+        Plot.ruleY([0])
+    ]
+})
+```
+
+Together, as state space diagram:
+
+```js
+Plot.plot({
+  y: {grid: true},
+  color: {legend: true},
+  caption: "beta=40",
+  marks: [
+        Plot.frame(),
+        Plot.contour(hystData, {x: 'x0', y: 'k', fill: 'avgProgs'}),
+    ]
+})
+```
