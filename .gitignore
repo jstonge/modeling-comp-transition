@@ -20,3 +20,5 @@ src/hysteresis_1
 
 julia/experiments/results/sweeps.duckdb
 src/hysteresis-data.parquet
+
+old/
