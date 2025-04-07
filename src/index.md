@@ -96,9 +96,11 @@ function simple1(data, {width, facet} = {}) {
     return Plot.plot({
         height: 300,
         width,
-        color: {legend: true, type: 'linear', label: "χ"},
+        color: {legend: true, type: 'ordinal', label: "χ"},
         grid: true,
+        nice:true,
         y: {type: do_log_simple ? 'log' : 'linear', label : 'cumulative deaths'}, 
+        fx: {label: "ktau"},
         x: {label: null},
         marks: [
             Plot.frame(),
@@ -115,9 +117,10 @@ function simple2(data, {width, facet} = {}) {
         width,
         color: {type: 'linear'},
         grid: true,
+        nice:true,
         y: {label : 'average Progs'}, 
         x: {label: 'time'},
-        caption: 'Symbols: Circle (k=3); Cross (k=6)',
+        fx: {label: "ktau"},
         marks: [
             Plot.frame(),
             facet ? 
@@ -133,8 +136,8 @@ function simple2(data, {width, facet} = {}) {
 You can play the same game with other χ. 
 
 ```js
-let b1 = view(Inputs.range([0.11,0.32], {label: "Low χ", step:0.01, value:0.11}))
-let b2 = view(Inputs.range([0.12,0.33], {label: "High χ", step:0.01, value:0.33}))
+let b1 = view(Inputs.range([0.06,0.30], {label: "Low χ", step:0.01, value:0.11}))
+let b2 = view(Inputs.range([0.12,0.30], {label: "High χ", step:0.01, value:0.30}))
 ```
 We find that ...
 
@@ -156,7 +159,7 @@ let do_log_simple = view(Inputs.toggle({label: 'log yaxis'}))
     Plot.plot({
         height: 300,
         width: 600,
-        x: {label: "a"},
+        x: {label: "χ"},
         y: {grid: true, type: "log"},
         marks: [
                 Plot.dot(foo.filter(d => d.k==25), {x: 'beta', y: 'costDeathsCum', fill: "beta", tip: true }),
@@ -170,10 +173,10 @@ let do_log_simple = view(Inputs.toggle({label: 'log yaxis'}))
         Plot.plot({
         height: 300,
         width: 600,
-        x: {label: "a"},
+        x: {label: "χ"},
         y: {grid: true},
         nice:true,
-        caption: "tau_rescaling=1.0; ktau=20.0; kc=30",
+        caption: "tau_rescaling=5.0; ktau=25.0; kc=30",
         marks: [
             Plot.dot(foo.filter(d => d.k==25), {x: 'beta', y: 'avgProgs', fill: "beta", tip: true }),
             Plot.dot(foo.filter(d => d.k==25), {x: 'beta', y: 'avgProgs', fill: "beta", fillOpacity: 0.3 }),

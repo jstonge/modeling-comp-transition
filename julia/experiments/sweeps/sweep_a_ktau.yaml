@@ -1,5 +1,5 @@
-model_version: v1
-output_dir: sweep_a_ktau_v1
+model_version: v2
+output_dir: sweep_a_ktau_v2
 sweep:
   a:
     start: 1.0
@@ -13,10 +13,10 @@ fixed_parameters:
   α: 0.9
   νn: 0.2
   νp: 0.2
-  K: 25
+  K: 20
   kc: 30.0
   x0c: 0.3
   bl: 0.1
   r: 5.0
-tspan: [0.0, 200.0]
-grid_size: 25
+tspan: [0.0, 100.0]
+grid_size: 20

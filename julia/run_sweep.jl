@@ -6,7 +6,7 @@ include("./helpers.jl")
 
 SRC_DIR = joinpath(pwd(), "julia")
 DIR_EXPERIMENT = joinpath(SRC_DIR, "experiments")
-DIR_RES = joinpath(SRC_DIR, "results")
+DIR_RES = joinpath(DIR_EXPERIMENT, "results")
 
 ################################################################################
 # 1) Parse config
