@@ -6,6 +6,7 @@ sql:
 # Modeling Comp Transition
 ## Introduction
 
+
 We show some results that we have so far. Recall the procedure is as follows; 
 - We start in the equilibrium state without programmers, then look at conditions under which we get to state with programmers. We want to get out of the first state, while accomplishing the following objectives:
     - Reduce number of sacrifice students in the transition
@@ -18,6 +19,25 @@ We show some results that we have so far. Recall the procedure is as follows;
     - `cumulative death`: We keep track of how many people leave the system because as a result of a fail transition. 
     - `avgProgs`: We check the final fraction of programmers in the system.
     - `Time`: We now leave the system run for a given amount of time, then we look at different metrics
+
+<div class="warning">All of the results have suffered the same Python filtering in the data loader to make it more lightweigth
+
+```python
+# To reduce memory usage
+scale_factor = 1000  # Convert to a large integer scale
+df['time_scaled'] = (df['time'] * scale_factor).astype(int)
+df = df[df['time_scaled'] % int(1 * scale_factor) == 0]
+       .drop(columns=['time_scaled']).reset_index(drop=True)
+
+```
+Also we use those default values
+- μ=0.9
+- νn=νp=0.2
+- tau_rescaling=5.0
+
+p.s. Some variable names might still be wrong, as we updated the code to the new model version.
+</div>
+
 
 <!-- <small>
     <details><summary>Procedure in excruciating details!</summary>
@@ -53,14 +73,11 @@ let mydata2 = raw_data.filter(d => [25].includes(d.k) & [0.06, 0.11, 0.14, 0.17,
 let mydata3 = raw_data.filter(d => [15,25].includes(d.k))
 ```
 
-```js
-let do_facet = view(Inputs.toggle({label: 'facet', value: true}))
-```
 
 <div class="grid grid-cols-2">
     <div>
-    ${simple1(mydata, {width: 600, facet: do_facet})}
-    ${simple2(mydata, {width: 600, facet: do_facet})}
+    ${simple1(mydata, {width: 600, facet: true})}
+    ${simple2(mydata, {width: 600, facet: true})}
     </div>
     <div>
         <ul>
@@ -140,6 +157,11 @@ let b1 = view(Inputs.range([0.06,0.30], {label: "Low χ", step:0.01, value:0.11}
 let b2 = view(Inputs.range([0.12,0.30], {label: "High χ", step:0.01, value:0.30}))
 ```
 We find that ...
+
+```sql
+SELECT * FROM data WHERE beta = 0.11
+```
+
 
 ## More χs
 
@@ -429,7 +451,7 @@ function helpers1() {
         Plot.frame(),
         Plot.line(
             d3.range(0, 1, 0.01),
-            { x: x => x, y: x => B(x, a), stroke: "orange" }
+            { x: x => x, y: x => B(x, a), stroke: "blue", strokeWidth: 3 }
         ),
         Plot.line(
             d3.range(0, 1, 0.01),
@@ -437,7 +459,7 @@ function helpers1() {
         ),
         Plot.line(
             d3.range(0, 1, 0.01),
-            { x: x => x, y: x => PI(x, a), stroke: "red" }
+            { x: x => x, y: x => PI(x, a), stroke: "red", strokeDasharray: 10, strokeWidth: 3}
         )
     ]
 })
@@ -452,7 +474,7 @@ function helpers2() {
     grid: true,
     width: 300, 
     height: 200,
-    color: {domain: ["B-C","B-C+Π"], range: ["blue","green", "red"], legend:true},
+    color: {domain: ["B-C","B-C+Π"], range: ["blue","orange"], legend:true},
     x: {label:"#progs/# non-progs"},
     y: {label:"f(x)"},
     marks: [
@@ -528,7 +550,6 @@ function C(x, kc, x0c) {
 function tau(x, ktau, a, kc, x0c) {
     return 5*(1. / (1. + Math.exp(-ktau * (B(x, a) - C(x, kc, x0c) + PI(x, a)))) )
 } 
-
 ```
 
 <style>

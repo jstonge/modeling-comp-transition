@@ -16,10 +16,12 @@ import sys
 
 # df = pd.concat(dfs)
 
+# df['beta']  = df.beta.round(2)
+
 # # To reduce memory usage
 # scale_factor = 1000  # Convert to a large integer scale
 # df['time_scaled'] = (df['time'] * scale_factor).astype(int)
-# df = df[df['time_scaled'] % int(0.03 * scale_factor) == 0].drop(columns=['time_scaled']).reset_index(drop=True)
+# df = df[df['time_scaled'] % int(1 * scale_factor) == 0].drop(columns=['time_scaled']).reset_index(drop=True)
 
 # df.to_parquet("src/tradeoff.parquet")
 
