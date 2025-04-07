@@ -78,7 +78,7 @@
          y[max1 - 1][0] = 1.0; // large group, all non-programmers
          last_avg = 0.0;
      } else if (IC == 4) {
-        y[35][0] = 1.0; // some ratio
+        y[max1 - 1][0] = 1.0; // some ratio
         last_avg = 0.0;
     } else {
          cerr << "Invalid IC value.\n";
@@ -100,8 +100,8 @@
      double t_prev = 0.0;         // track previous time for dt
 
     // Main loop
-    // for (double t_target = t + t_step; t < t_max; t_target += t_step) {
-    for (double t_target = t + t_step; diff > 1e-6; t_target += t_step) {
+    for (double t_target = t + t_step; t < t_max; t_target += t_step) {
+    // for (double t_target = t + t_step; diff > 1e-6; t_target += t_step) {
         while (t < t_target) {
             int status = gsl_odeiv_evolve_apply(evolve, control, step, &sys, &t, t_target, &dt, y.data());
             if (status != GSL_SUCCESS) {

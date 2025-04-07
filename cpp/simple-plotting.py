@@ -3,6 +3,9 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import pandas as pd
 
+# data = np.genfromtxt("temp.csv", delimiter=",")
+# plt.plot(range(len(data)), data[:, -1], marker="o")
+
 # 1) Load data from CSV
 #    Format per line:  t, d1, d2, y[d1][d2], costDeathsCum
 data = np.genfromtxt("test.csv", delimiter=",")
@@ -15,13 +18,21 @@ y_col      = data[:, 3]
 cost_cum   = data[:, 4]  # costDeathsCum
 avg_progs  = data[:, 5]  
 
+
 unique_times = np.unique(t_col)
 
 df = pd.DataFrame(data, columns=["t", "d1", "d2", "y", "cost", "avg_progs"])
 
-df[df.t == unique_times[0]].y.sum()
-df[df.t == unique_times[100]].y.sum()
-df[df.t == df.t.max()].y.sum()
+# check first, second and last for prob leaks
+
+print(df[df.t == unique_times[0]].y.sum())
+assert (df[df.t == unique_times[0]].y.sum() >= 0.999) & (df[df.t == unique_times[0]].y.sum() <= 1.001)
+
+print(df[df.t == 2].y.sum())
+assert (df[df.t == 2].y.sum() >= 0.999) & (df[df.t == 2].y.sum() <= 1.001)
+
+print(df[df.t == df.t.max()].y.sum())
+assert (df[df.t == unique_times[len(unique_times)-1]].y.sum() >= 0.999) & (df[df.t == unique_times[len(unique_times)-1]].y.sum() <= 1.001)
 
 def plot_prog_vs_nonprog_hm(i):
   # 2) Identify columns
@@ -76,11 +87,10 @@ print(df[df.t == unique_times[10]].y.sum())
 plot_prog_vs_nonprog_hm(10)
 print(df[df.t == unique_times[100]].y.sum())
 plot_prog_vs_nonprog_hm(100)
-print(df[df.t == unique_times[1000]].y.sum())
-plot_prog_vs_nonprog_hm(1000)
 print(df[df.t == df.t.max()].y.sum())
 plot_prog_vs_nonprog_hm(len(unique_times))
 
+print(f"final average number of programmers: {df.iloc[-1, -1]}")
 
 # dedup_df = df[~df.t.duplicated()]
 # sns.set_style("whitegrid")
