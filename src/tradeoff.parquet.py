@@ -9,17 +9,14 @@ import sys
 # dfs = []
 # for mydir in DAT_DIR.glob("*_data_dir"):
 #     for csvfile in mydir.glob("test_*"):
-        
 #         df=pd.read_csv(csvfile, names=["time", "d1", "d2", "y", "costDeathsCum", "avgProgs"])
 #         df['beta']=csvfile.stem.split('_')[1]
-#         df['k']=mydir.stem.split('_')[0].split('k')[1]
-
+#         df['k']=mydir.stem.split('_')[0].split('ktau')[1]
 #         dfs.append(df)
 
 # df = pd.concat(dfs)
 
-
-# To reduce memory usage
+# # To reduce memory usage
 # scale_factor = 1000  # Convert to a large integer scale
 # df['time_scaled'] = (df['time'] * scale_factor).astype(int)
 # df = df[df['time_scaled'] % int(0.03 * scale_factor) == 0].drop(columns=['time_scaled']).reset_index(drop=True)
@@ -27,6 +24,7 @@ import sys
 # df.to_parquet("src/tradeoff.parquet")
 
 df = pd.read_parquet("src/tradeoff.parquet")
+
 
 buf = pa.BufferOutputStream()
 table = pa.Table.from_pandas(df)
